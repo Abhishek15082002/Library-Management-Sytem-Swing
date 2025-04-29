@@ -1,9 +1,5 @@
-package library.backend; // Correct package
+package library.backend; 
 import library.DatabaseConnection;
-import library.UserSession;
-// Custom exceptions are now in the same package, no import needed if separate files used
-// If kept in this file (not recommended), they need to be public static classes
-
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -256,7 +252,6 @@ public class StudentService { // Ensure class is public
         try {
              conn = DatabaseConnection.getConnection(); // Should resolve now
              if (conn == null || conn.isClosed()) { throw new SQLException("Database connection failed or is closed."); }
-             // ... rest of reissue logic ...
              LocalDate newDueDate = calculateDueDate(LocalDate.now()); // New due date from today
 
             // Update due date, increment reissue count, ensure status is 'Issued'
@@ -481,4 +476,22 @@ public class StudentService { // Ensure class is public
          catch (NumberFormatException e) { System.err.println("Invalid double format for setting '" + key + "'. Using default."); return defaultValue; }
     }
 
+}
+
+class ReturnException extends Exception {
+    public ReturnException(String message) {
+        super(message);
+    }
+}
+
+class BorrowException extends Exception { 
+    public BorrowException(String message) {
+        super(message);
+    }
+}
+
+class ReissueException extends Exception { 
+    public ReissueException(String message) {
+        super(message);
+    }
 }

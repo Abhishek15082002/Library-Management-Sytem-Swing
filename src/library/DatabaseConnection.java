@@ -49,7 +49,7 @@ public class DatabaseConnection {
                 System.out.println("Test Connection Successful!");
     
                 // Read and execute SQL statements from schemas.sql
-                try (BufferedReader reader = new BufferedReader(new FileReader("./schemas.sql"))) {
+                try (BufferedReader reader = new BufferedReader(new FileReader("../sql/schemas.sql"))) {
                     StringBuilder sqlBuilder = new StringBuilder();
                     String line;
                     while ((line = reader.readLine()) != null) {

@@ -6,20 +6,12 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.Date;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
 import library.UserSession;
 import library.backend.StudentService;
-import library.backend.BorrowException; // Assuming these are in backend package
-import library.backend.ReturnException;
-import library.backend.ReissueException;
-
 
 public class StudentDashboard extends JFrame implements ActionListener {
 
