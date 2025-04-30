@@ -1,4 +1,4 @@
-package library.frontend; // Correct package
+package library.frontend;
 
 import javax.swing.*;
 import java.awt.*;
@@ -8,27 +8,22 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-// Correct imports for classes in the parent 'library' package
 import library.DatabaseConnection;
 import library.UserSession;
-// Import backend if needed
-
-// No need to import AdminDashboard, etc. if they are in the same package 'library.frontend'
 
 public class LoginFrame extends JFrame implements ActionListener {
-
-    // ... (rest of LoginFrame code is mostly correct, ensure class names are used directly) ...
 
     private JComboBox<String> userTypeDropdown;
     private JTextField usernameField;
     private JPasswordField passwordField;
     private JButton loginButton;
     private JButton forgotButton;
+    private JButton signUpButton;
     private JLabel statusLabel;
 
     public LoginFrame() {
         setTitle("Smart Library - Login");
-        setSize(400, 300);
+        setSize(600, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(10, 10));
@@ -70,108 +65,174 @@ public class LoginFrame extends JFrame implements ActionListener {
         loginButton = new JButton("Login");
         loginButton.setPreferredSize(new Dimension(100, 30));
         loginButton.addActionListener(this);
+
         forgotButton = new JButton("Forgot Password?");
-        forgotButton.setBorderPainted(false); forgotButton.setOpaque(false);
-        forgotButton.setBackground(UIManager.getColor("Label.background")); forgotButton.setForeground(Color.BLUE);
-        forgotButton.setCursor(new Cursor(Cursor.HAND_CURSOR)); forgotButton.addActionListener(this);
-        bottomPanel.add(loginButton); bottomPanel.add(forgotButton);
+        forgotButton.setBorderPainted(false);
+        forgotButton.setOpaque(false);
+        forgotButton.setBackground(UIManager.getColor("Label.background"));
+        forgotButton.setForeground(Color.BLUE);
+        forgotButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        forgotButton.setFocusPainted(false);
+        forgotButton.addActionListener(this);
+
+        signUpButton = new JButton("New here? Sign up");
+        signUpButton.setBorderPainted(false);
+        signUpButton.setOpaque(false);
+        signUpButton.setBackground(UIManager.getColor("Label.background"));
+        signUpButton.setForeground(Color.BLUE);
+        signUpButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        signUpButton.setFocusPainted(false);
+        signUpButton.addActionListener(this);
+
+        bottomPanel.add(loginButton);
+        bottomPanel.add(forgotButton);
+        bottomPanel.add(signUpButton);
         add(bottomPanel, BorderLayout.SOUTH);
 
         setVisible(true);
     }
 
-     @Override
+    @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == loginButton || e.getSource() == passwordField) { attemptLogin(); }
-        else if (e.getSource() == forgotButton) {
-            JOptionPane.showMessageDialog(this, "Forgot Password functionality not implemented.", "Information", JOptionPane.INFORMATION_MESSAGE);
+        if (e.getSource() == loginButton || e.getSource() == passwordField) {
+            attemptLogin();
+        } else if (e.getSource() == forgotButton) {
+            new ForgetPassword();
+        } else if (e.getSource() == signUpButton) {
+            new SignUpFrame(); // Open sign up window (make sure this class exists)
         }
     }
 
-     private void attemptLogin() {
+    private void attemptLogin() {
         String selectedRole = (String) userTypeDropdown.getSelectedItem();
         String username = usernameField.getText().trim();
         String plainPassword = new String(passwordField.getPassword());
 
-        if (username.isEmpty() || plainPassword.isEmpty()) { showStatus("Username and Password cannot be empty.", true); return; }
+        if (username.isEmpty() || plainPassword.isEmpty()) {
+            showStatus("Username and Password cannot be empty.", true);
+            return;
+        }
 
-        loginButton.setEnabled(false); showStatus("Authenticating...", false);
+        loginButton.setEnabled(false);
+        showStatus("Authenticating...", false);
 
-        // --- Simplified execution for clarity (consider SwingWorker for real app) ---
         String[] authResult = authenticateUser(username, plainPassword, selectedRole);
-        loginButton.setEnabled(true); // Re-enable button
+        loginButton.setEnabled(true);
 
         if (authResult != null) {
-            String userId = authResult[0]; String actualRole = authResult[1];
+            String userId = authResult[0];
+            String actualRole = authResult[1];
             try {
-                UserSession.createInstance(username, actualRole, userId); // UserSession from library package
-                System.out.println("Login Successful! User: " + username + ", Role: " + actualRole + ", ID: " + userId);
-                openDashboard(actualRole); // Opens dashboards from this frontend package
+                UserSession.createInstance(username, actualRole, userId);
+                openDashboard(actualRole);
                 this.dispose();
             } catch (IllegalStateException | IllegalArgumentException sessionEx) {
-                 showStatus(sessionEx.getMessage(), true); System.err.println("Session Error: " + sessionEx.getMessage());
-                 UserSession.clearInstance();
+                showStatus(sessionEx.getMessage(), true);
+                UserSession.clearInstance();
             }
         } else {
-            passwordField.setText(""); usernameField.requestFocusInWindow();
+            passwordField.setText("");
+            usernameField.requestFocusInWindow();
         }
-        // --- End simplified block ---
     }
-
 
     private String[] authenticateUser(String username, String plainPassword, String selectedRole) {
         String sql = "SELECT password, role, status FROM Users WHERE username = ?";
         String userId = username;
         Connection conn = null;
         try {
-             conn = DatabaseConnection.getConnection(); // DatabaseConnection from library package
-             if (conn == null || conn.isClosed()) { showStatus("Cannot connect to database.", true); return null; }
-             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            conn = DatabaseConnection.getConnection();
+            if (conn == null || conn.isClosed()) {
+                showStatus("Cannot connect to database.", true);
+                return null;
+            }
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setString(1, username);
                 try (ResultSet rs = pstmt.executeQuery()) {
                     if (rs.next()) {
-                        String storedPasswordOrHash = rs.getString("password"); String actualRole = rs.getString("role"); String status = rs.getString("status");
-                        if (!actualRole.equalsIgnoreCase(selectedRole)) { showStatus("Role mismatch.", true); return null; }
-                        // --- Password Check (REPLACE WITH HASHING) ---
+                        String storedPasswordOrHash = rs.getString("password");
+                        String actualRole = rs.getString("role");
+                        String status = rs.getString("status");
+
+                        if (!actualRole.equalsIgnoreCase(selectedRole)) {
+                            showStatus("Role mismatch.", true);
+                            return null;
+                        }
                         boolean passwordMatch = plainPassword.equals(storedPasswordOrHash);
-                        if (!passwordMatch) { showStatus("Invalid password.", true); return null; }
-                        // --- Status Check ---
-                        if (!"Active".equalsIgnoreCase(status)) { showStatus("Account inactive.", true); return null; }
-                        // --- Success ---
+                        if (!passwordMatch) {
+                            showStatus("Invalid password.", true);
+                            return null;
+                        }
+                        if (!"Active".equalsIgnoreCase(status)) {
+                            showStatus("Account inactive.", true);
+                            return null;
+                        }
                         userId = fetchSpecificUserId(conn, username, actualRole);
                         return new String[]{userId, actualRole};
-                    } else { showStatus("Username not found.", true); return null; }
+                    } else {
+                        showStatus("Username not found.", true);
+                        return null;
+                    }
                 }
             }
-        } catch (SQLException e) { showStatus("Database error.", true); e.printStackTrace(); return null;
-        } catch (Exception e) { showStatus("Login error.", true); e.printStackTrace(); return null; }
-        // Connection closing managed by DatabaseConnection or needs explicit handling if not pooled
+        } catch (SQLException e) {
+            showStatus("Database error.", true);
+            e.printStackTrace();
+            return null;
+        } catch (Exception e) {
+            showStatus("Login error.", true);
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private String fetchSpecificUserId(Connection conn, String username, String role) throws SQLException {
-        String specificId = username; String query = null; String idColumn = null;
-        if ("Student".equalsIgnoreCase(role)) { query = "SELECT student_id FROM Students WHERE username = ?"; idColumn = "student_id"; }
-        else if ("Librarian".equalsIgnoreCase(role)) { query = "SELECT librarian_id FROM Librarians WHERE username = ?"; idColumn = "librarian_id"; }
-        else { return username; }
+        String specificId = username;
+        String query = null;
+        String idColumn = null;
+        if ("Student".equalsIgnoreCase(role)) {
+            query = "SELECT student_id FROM Students WHERE username = ?";
+            idColumn = "student_id";
+        } else if ("Librarian".equalsIgnoreCase(role)) {
+            query = "SELECT librarian_id FROM Librarians WHERE username = ?";
+            idColumn = "librarian_id";
+        } else {
+            return username;
+        }
+
         try (PreparedStatement pstmt = conn.prepareStatement(query)) {
             pstmt.setString(1, username);
-            try (ResultSet rs = pstmt.executeQuery()) { if (rs.next()) { specificId = rs.getString(idColumn); }
-            else { System.err.println("Warning: Specific ID not found for " + role + " " + username); } }
-        } return specificId;
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    specificId = rs.getString(idColumn);
+                } else {
+                    System.err.println("Warning: Specific ID not found for " + role + " " + username);
+                }
+            }
+        }
+        return specificId;
     }
 
     private void openDashboard(String role) {
         SwingUtilities.invokeLater(() -> {
             try {
                 JFrame dashboard = null;
-                // These classes are in the same package (library.frontend)
-                if ("Admin".equalsIgnoreCase(role)) { dashboard = new AdminDashboard(); }
-                else if ("Librarian".equalsIgnoreCase(role)) { dashboard = new LibrarianDashboard(); }
-                else if ("Student".equalsIgnoreCase(role)) { dashboard = new StudentDashboard(); }
-                else { showStatus("Unknown role: " + role, true); return; }
-                if (dashboard != null) { dashboard.setVisible(true); }
+                if ("Admin".equalsIgnoreCase(role)) {
+                    dashboard = new AdminDashboard();
+                } else if ("Librarian".equalsIgnoreCase(role)) {
+                    dashboard = new LibrarianDashboard();
+                } else if ("Student".equalsIgnoreCase(role)) {
+                    dashboard = new StudentDashboard();
+                } else {
+                    showStatus("Unknown role: " + role, true);
+                    return;
+                }
+                if (dashboard != null) {
+                    dashboard.setVisible(true);
+                }
             } catch (Exception ex) {
-                showStatus("Error loading dashboard.", true); ex.printStackTrace();
+                showStatus("Error loading dashboard.", true);
+                ex.printStackTrace();
                 JOptionPane.showMessageDialog(this, "Error loading dashboard.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
