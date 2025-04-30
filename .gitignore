@@ -36,7 +36,6 @@ bin/
 *.log
 
 # Package files (IDE related or build tools)
-*.jar
 *.war
 *.ear
 target/
