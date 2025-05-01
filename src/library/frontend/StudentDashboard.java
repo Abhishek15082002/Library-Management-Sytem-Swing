@@ -57,11 +57,11 @@ public class StudentDashboard extends JFrame implements ActionListener {
             SwingUtilities.invokeLater(LoginFrame::new); // LoginFrame is in this package
             // Need to initialize final fields even if returning early, or structure differently
             // To satisfy compiler, assign here before return, though object won't be used
-             this.studentService = null; // Assign null to satisfy final field check before returning
+            this.studentService = null; // Assign null to satisfy final field check before returning
             return; // Stop constructor if session is invalid
         }
 
-        // Initialize the final service field *after* successful session validation
+        // Initialize the final service field after successful session validation
         this.studentService = new StudentService(); // Instantiate service from backend
 
         // Proceed with setting up the rest of the UI
@@ -85,16 +85,29 @@ public class StudentDashboard extends JFrame implements ActionListener {
         createMyBooksTab();
         createRequestBooksTab();
         createNotificationsTab();
-        createLogoutTab();
 
         // Add tabs
         mainTabbedPane.addTab("Borrow Books", borrowBooksPanel);
         mainTabbedPane.addTab("My Borrowed Books", myBooksPanel);
         mainTabbedPane.addTab("Request New Book", requestBooksPanel);
         mainTabbedPane.addTab("Notifications", notificationsPanel);
-        mainTabbedPane.addTab("Logout", logoutPanel);
 
-        add(mainTabbedPane);
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JLabel titleLabel = new JLabel("Student Dashboard - Welcome, " + session.getUsername());
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        topPanel.add(titleLabel, BorderLayout.WEST);
+
+        logoutButton = new JButton("Logout"); // Initialize
+        logoutButton.setPreferredSize(new Dimension(120, 35));
+        logoutButton.setFont(new Font("Arial", Font.BOLD, 14));
+        logoutButton.setToolTipText("Logout and return to the login screen.");
+        logoutButton.addActionListener(this);
+        topPanel.add(logoutButton, BorderLayout.EAST);
+
+        add(topPanel, BorderLayout.NORTH);
+        add(mainTabbedPane, BorderLayout.CENTER);
 
         // Load initial data
         loadInitialData();
@@ -130,7 +143,7 @@ public class StudentDashboard extends JFrame implements ActionListener {
         myBooksPanel = new JPanel(new BorderLayout(10, 10));
         myBooksPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         String[] borrowedBookColumns = {"Issue ID", "Book ID", "Title", "Issue Date", "Due Date", "Return Date", "Status", "Reissues", "Fine (Unpaid)"};
-         borrowedBooksModel = new DefaultTableModel(borrowedBookColumns, 0){ @Override public boolean isCellEditable(int r, int c){ return false; }};
+        borrowedBooksModel = new DefaultTableModel(borrowedBookColumns, 0){ @Override public boolean isCellEditable(int r, int c){ return false; }};
         borrowedBooksTable = new JTable(borrowedBooksModel);
         borrowedBooksTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         borrowedBooksTable.setAutoCreateRowSorter(true);
@@ -183,19 +196,8 @@ public class StudentDashboard extends JFrame implements ActionListener {
         actionPanel.add(markReadButton);
         notificationsPanel.add(actionPanel, BorderLayout.SOUTH);
     }
-    private void createLogoutTab() {
-        logoutPanel = new JPanel(new GridBagLayout());
-        logoutPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        logoutButton = new JButton("Logout");
-        logoutButton.setPreferredSize(new Dimension(150, 40));
-        logoutButton.setFont(new Font("Arial", Font.BOLD, 14));
-        logoutButton.setToolTipText("Logout and return to the login screen.");
-        logoutButton.addActionListener(this);
-        GridBagConstraints gbc = new GridBagConstraints(); gbc.anchor = GridBagConstraints.CENTER;
-        logoutPanel.add(logoutButton, gbc);
-    }
 
-     /** Loads initial data for all relevant tables. */
+    /** Loads initial data for all relevant tables. */
     private void loadInitialData() {
         loadAvailableBooks(""); // Load all initially
         loadMyBorrowedBooks();
@@ -252,7 +254,7 @@ public class StudentDashboard extends JFrame implements ActionListener {
         worker.execute();
     }
 
-     private void handleReturnBook() {
+    private void handleReturnBook() {
         int selectedRow = borrowedBooksTable.getSelectedRow();
         if (selectedRow == -1) { showWarning("Please select a book to return."); return; }
         int modelRow = borrowedBooksTable.convertRowIndexToModel(selectedRow);
@@ -270,15 +272,15 @@ public class StudentDashboard extends JFrame implements ActionListener {
 
         returnButton.setEnabled(false);
         SwingWorker<String, Void> worker = new SwingWorker<>() {
-             @Override protected String doInBackground() throws Exception {
+            @Override protected String doInBackground() throws Exception {
                 return studentService.returnBook(issueId, bookId, session.getUserId(), dueDate);
             }
-             @Override protected void done() {
+            @Override protected void done() {
                 try {
                     String resultMessage = get(); showSuccess(resultMessage);
                     loadMyBorrowedBooks(); loadAvailableBooks(searchField.getText().trim());
                 } catch (Exception e) {
-                     Throwable cause = e.getCause() != null ? e.getCause() : e;
+                    Throwable cause = e.getCause() != null ? e.getCause() : e;
                     showError("Error returning book: " + cause.getMessage());
                     loadMyBorrowedBooks();
                 } finally { returnButton.setEnabled(true); }
@@ -287,7 +289,7 @@ public class StudentDashboard extends JFrame implements ActionListener {
         worker.execute();
     }
 
-     private void handleReissueBook() {
+    private void handleReissueBook() {
         int selectedRow = borrowedBooksTable.getSelectedRow();
         if (selectedRow == -1) { showWarning("Please select a book to reissue."); return; }
         int modelRow = borrowedBooksTable.convertRowIndexToModel(selectedRow);
@@ -304,16 +306,16 @@ public class StudentDashboard extends JFrame implements ActionListener {
         if (confirm != JOptionPane.YES_OPTION) return;
 
         reissueButton.setEnabled(false);
-         SwingWorker<LocalDate, Void> worker = new SwingWorker<>() {
-             @Override protected LocalDate doInBackground() throws Exception {
+        SwingWorker<LocalDate, Void> worker = new SwingWorker<>() {
+            @Override protected LocalDate doInBackground() throws Exception {
                 return studentService.reissueBook(issueId, reissueCount);
             }
-             @Override protected void done() {
+            @Override protected void done() {
                 try {
                     LocalDate newDueDate = get(); showSuccess("Book reissued successfully! New Due Date: " + newDueDate);
                     loadMyBorrowedBooks();
                 } catch (Exception e) {
-                     Throwable cause = e.getCause() != null ? e.getCause() : e;
+                    Throwable cause = e.getCause() != null ? e.getCause() : e;
                     showError("Error reissuing book: " + cause.getMessage());
                     loadMyBorrowedBooks();
                 } finally { reissueButton.setEnabled(true); }
@@ -338,7 +340,7 @@ public class StudentDashboard extends JFrame implements ActionListener {
                     if (unpaidFines.isEmpty()) { showInfo("No unpaid fines found for this book issue."); }
                     else { showFineDetailsDialog(issueId, unpaidFines); }
                 } catch (Exception e) {
-                     Throwable cause = e.getCause() != null ? e.getCause() : e;
+                    Throwable cause = e.getCause() != null ? e.getCause() : e;
                     showError("Error checking fines: " + cause.getMessage());
                     cause.printStackTrace();
                 }
@@ -348,17 +350,17 @@ public class StudentDashboard extends JFrame implements ActionListener {
     }
 
     private void showFineDetailsDialog(int issueId, List<Object[]> unpaidFines) {
-         StringBuilder fineDetails = new StringBuilder("Unpaid Fine Details for Issue ID " + issueId + ":\n");
-         double totalFine = 0; List<Integer> fineIds = new ArrayList<>();
-         for (Object[] fine : unpaidFines) {
-             int fineId = (int) fine[0]; double amount = (double) fine[1]; Date fineDate = (Date) fine[2];
-             fineDetails.append(String.format(" - Fine ID: %d, Amount: %.2f, Date: %s\n", fineId, amount, fineDate));
-             totalFine += amount; fineIds.add(fineId);
-         }
-         fineDetails.append(String.format("\nTotal Unpaid Fine: %.2f", totalFine));
-         int choice = JOptionPane.showConfirmDialog(this, fineDetails.toString() + "\n\nMark fine(s) as paid (Placeholder)?",
-                                                   "Fine Details", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
-         if (choice == JOptionPane.YES_OPTION) { markFinesAsPaid(fineIds); }
+        StringBuilder fineDetails = new StringBuilder("Unpaid Fine Details for Issue ID " + issueId + ":\n");
+        double totalFine = 0; List<Integer> fineIds = new ArrayList<>();
+        for (Object[] fine : unpaidFines) {
+            int fineId = (int) fine[0]; double amount = (double) fine[1]; Date fineDate = (Date) fine[2];
+            fineDetails.append(String.format(" - Fine ID: %d, Amount: %.2f, Date: %s\n", fineId, amount, fineDate));
+            totalFine += amount; fineIds.add(fineId);
+        }
+        fineDetails.append(String.format("\nTotal Unpaid Fine: %.2f", totalFine));
+        int choice = JOptionPane.showConfirmDialog(this, fineDetails.toString() + "\n\nMark fine(s) as paid (Placeholder)?",
+                "Fine Details", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+        if (choice == JOptionPane.YES_OPTION) { markFinesAsPaid(fineIds); }
     }
 
     private void markFinesAsPaid(List<Integer> fineIds) {
@@ -374,7 +376,7 @@ public class StudentDashboard extends JFrame implements ActionListener {
                     if (updatedCount > 0) { showSuccess(updatedCount + " fine(s) marked as paid successfully!"); loadMyBorrowedBooks(); }
                     else { showInfo("Could not update fine status (already paid or issue?)."); loadMyBorrowedBooks(); }
                 } catch (Exception e) {
-                     Throwable cause = e.getCause() != null ? e.getCause() : e;
+                    Throwable cause = e.getCause() != null ? e.getCause() : e;
                     showError("Error during fine payment: " + cause.getMessage());
                     cause.printStackTrace();
                 } finally { viewFineButton.setEnabled(true); }
@@ -383,7 +385,7 @@ public class StudentDashboard extends JFrame implements ActionListener {
         worker.execute();
     }
 
-     private void handleSubmitRequest() {
+    private void handleSubmitRequest() {
         String title = requestTitleField.getText().trim(); String author = requestAuthorField.getText().trim(); String reason = requestReasonArea.getText().trim();
         if (title.isEmpty() || author.isEmpty()) { showWarning("Please enter Title and Author."); return; }
         submitRequestButton.setEnabled(false);
@@ -397,7 +399,7 @@ public class StudentDashboard extends JFrame implements ActionListener {
                         showSuccess("Book request submitted successfully."); requestTitleField.setText(""); requestAuthorField.setText(""); requestReasonArea.setText("");
                     } else { showError("Failed to submit book request."); }
                 } catch (Exception e) {
-                     Throwable cause = e.getCause() != null ? e.getCause() : e;
+                    Throwable cause = e.getCause() != null ? e.getCause() : e;
                     showError("Error submitting request: " + cause.getMessage());
                     cause.printStackTrace();
                 } finally { submitRequestButton.setEnabled(true); }
@@ -406,31 +408,31 @@ public class StudentDashboard extends JFrame implements ActionListener {
         worker.execute();
     }
 
-     private void handleMarkNotificationRead() {
-         int selectedRow = notificationsTable.getSelectedRow();
-         if (selectedRow == -1) { showWarning("Please select a notification."); return; }
-         int modelRow = notificationsTable.convertRowIndexToModel(selectedRow);
-         final int notificationId; // Make final for use in worker
-         if (modelRow < notificationIds.size()) { notificationId = notificationIds.get(modelRow); }
-         else { showError("Error identifying selected notification."); return; }
+    private void handleMarkNotificationRead() {
+        int selectedRow = notificationsTable.getSelectedRow();
+        if (selectedRow == -1) { showWarning("Please select a notification."); return; }
+        int modelRow = notificationsTable.convertRowIndexToModel(selectedRow);
+        final int notificationId; // Make final for use in worker
+        if (modelRow < notificationIds.size()) { notificationId = notificationIds.get(modelRow); }
+        else { showError("Error identifying selected notification."); return; }
 
-         markReadButton.setEnabled(false);
-         SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
-             @Override protected Boolean doInBackground() throws Exception {
-                 return studentService.markNotificationRead(notificationId, session.getUsername());
-             }
-             @Override protected void done() {
-                 try {
-                     if (get()) { System.out.println("Notification " + notificationId + " marked read."); loadNotifications(); }
-                     else { showInfo("Could not mark notification as read (already read or invalid?)."); loadNotifications(); }
-                 } catch (Exception e) {
-                      Throwable cause = e.getCause() != null ? e.getCause() : e;
-                     showError("Error marking notification read: " + cause.getMessage());
-                     cause.printStackTrace();
-                 } finally { markReadButton.setEnabled(true); }
-             }
-         };
-         worker.execute();
+        markReadButton.setEnabled(false);
+        SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
+            @Override protected Boolean doInBackground() throws Exception {
+                return studentService.markNotificationRead(notificationId, session.getUsername());
+            }
+            @Override protected void done() {
+                try {
+                    if (get()) { System.out.println("Notification " + notificationId + " marked read."); loadNotifications(); }
+                    else { showInfo("Could not mark notification as read (already read or invalid?)."); loadNotifications(); }
+                } catch (Exception e) {
+                    Throwable cause = e.getCause() != null ? e.getCause() : e;
+                    showError("Error marking notification read: " + cause.getMessage());
+                    cause.printStackTrace();
+                } finally { markReadButton.setEnabled(true); }
+            }
+        };
+        worker.execute();
     }
 
     private void performLogout() {
@@ -461,7 +463,7 @@ public class StudentDashboard extends JFrame implements ActionListener {
             @Override protected void done() {
                 try {
                     List<Object[]> books = get(); borrowedBooksModel.setRowCount(0);
-                     if(books.isEmpty()){ System.out.println("No books currently borrowed."); } else { books.forEach(borrowedBooksModel::addRow); }
+                    if(books.isEmpty()){ System.out.println("No books currently borrowed."); } else { books.forEach(borrowedBooksModel::addRow); }
                 } catch (Exception e) { handleLoadingError(e, "borrowed books"); borrowedBooksModel.setRowCount(0); }
             }
         };
@@ -469,12 +471,12 @@ public class StudentDashboard extends JFrame implements ActionListener {
     }
     private void loadNotifications() {
         notificationsModel.setRowCount(0); notificationIds.clear(); notificationsModel.addRow(new Object[]{"Loading...", "", "", ""});
-         SwingWorker<List<Object[]>, Void> worker = new SwingWorker<>() {
+        SwingWorker<List<Object[]>, Void> worker = new SwingWorker<>() {
             @Override protected List<Object[]> doInBackground() throws Exception { return studentService.getNotifications(session.getUsername()); }
             @Override protected void done() {
                 try {
                     List<Object[]> notifications = get(); notificationsModel.setRowCount(0); notificationIds.clear();
-                     if(notifications.isEmpty()){ System.out.println("No notifications found."); }
+                    if(notifications.isEmpty()){ System.out.println("No notifications found."); }
                     else {
                         for (Object[] data : notifications) {
                             notificationIds.add((Integer) data[0]); // Store ID

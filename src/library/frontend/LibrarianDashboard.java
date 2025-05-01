@@ -2,15 +2,40 @@ package library.frontend;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.time.LocalDate;
 
 public class LibrarianDashboard extends JFrame {
+
+    private JButton logoutButton;
 
     public LibrarianDashboard() {
         setTitle("Librarian Dashboard - Tabbed Version");
         setSize(1000, 700);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JLabel titleLabel = new JLabel("Librarian Dashboard");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        topPanel.add(titleLabel, BorderLayout.WEST);
+
+        logoutButton = new JButton("Logout");
+        logoutButton.setPreferredSize(new Dimension(120, 35));
+        logoutButton.setFont(new Font("Arial", Font.BOLD, 14));
+        logoutButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                logout(); // Call the logout functionality
+            }
+        });
+        topPanel.add(logoutButton, BorderLayout.EAST);
+
+        add(topPanel, BorderLayout.NORTH);
 
         // Main TabbedPane
         JTabbedPane mainTabbedPane = new JTabbedPane();
@@ -22,9 +47,8 @@ public class LibrarianDashboard extends JFrame {
         mainTabbedPane.addTab("Return Books", createReturnBooksTab());
         mainTabbedPane.addTab("Student Records", createStudentRecordsTab());
         mainTabbedPane.addTab("Overdue Notifications", createOverdueNotificationsTab());
-        mainTabbedPane.addTab("Logout", createLogoutTab());
 
-        add(mainTabbedPane);
+        add(mainTabbedPane, BorderLayout.CENTER);
         setVisible(true);
     }
 
@@ -249,23 +273,11 @@ public class LibrarianDashboard extends JFrame {
         System.out.println("Sending overdue notifications...");
     }
 
-    // Tab 7: Logout
-    private JPanel createLogoutTab() {
-        JPanel logoutPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 100));
-        JButton logoutButton = new JButton("Logout");
-        logoutButton.setPreferredSize(new Dimension(200, 50));
-        logoutPanel.add(logoutButton);
-
-        // Add action listener to handle logout
-        logoutButton.addActionListener(e -> logout());
-
-        return logoutPanel;
-    }
-
     // Backend function: Logout functionality
     private void logout() {
         // Placeholder for logging out the user
         System.out.println("Logging out...");
+        dispose();
     }
 
     public static void main(String[] args) {

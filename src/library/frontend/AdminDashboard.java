@@ -5,7 +5,6 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter; // For sorting tables
 import java.awt.*;
 import java.awt.event.*;
-import java.sql.SQLException;
 import java.util.List;
 import library.UserSession;
 import library.backend.AdminService; // Import the backend service
@@ -53,7 +52,6 @@ public class AdminDashboard extends JFrame implements ActionListener {
     private JPanel fineManagementPanel;
 
     // Logout Components
-    private JPanel logoutPanel;
     private JButton logoutButton;
 
 
@@ -84,15 +82,27 @@ public class AdminDashboard extends JFrame implements ActionListener {
         createLibrarianManagementTab();
         createReportsTab(); // Placeholder
         createFineManagementTab(); // Placeholder
-        createLogoutTab();
 
         mainTabs.addTab("User Accounts", userManagementPanel);
         mainTabs.addTab("Manage Librarians", librarianManagementPanel);
         mainTabs.addTab("View Reports", reportsPanel);
         mainTabs.addTab("Fine Management", fineManagementPanel);
-        mainTabs.addTab("Logout", logoutPanel);
 
-        add(mainTabs);
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JLabel titleLabel = new JLabel("Admin Dashboard - " + session.getUsername());
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        topPanel.add(titleLabel, BorderLayout.WEST);
+
+        logoutButton = new JButton("Logout");
+        logoutButton.setPreferredSize(new Dimension(120, 35));
+        logoutButton.setFont(new Font("Arial", Font.BOLD, 14));
+        logoutButton.addActionListener(this);
+        topPanel.add(logoutButton, BorderLayout.EAST);
+
+        add(topPanel, BorderLayout.NORTH);
+        add(mainTabs, BorderLayout.CENTER);
 
         // Load initial data for tables
         loadAllUsers();
@@ -209,19 +219,91 @@ public class AdminDashboard extends JFrame implements ActionListener {
     }
 
     // Placeholders for other tabs
-    private void createReportsTab() { reportsPanel = createPlaceholderPanel("System Reports - To be implemented"); }
-    private void createFineManagementTab() { fineManagementPanel = createPlaceholderPanel("Fine Management - To be implemented"); }
+    // 📁 View Reports
+    private void createReportsTab() {
+        reportsPanel = new JPanel(new BorderLayout()); // Store in instance variable
+
+        JTabbedPane reportsTabs = new JTabbedPane();
+
+        // Available Books
+        JPanel availableBooksPanel = new JPanel(new BorderLayout());
+        DefaultTableModel availableModel = new DefaultTableModel(new String[]{"Book ID", "Title", "Author"}, 0);
+        JTable availableBooksTable = new JTable(availableModel);
+        availableBooksPanel.add(new JScrollPane(availableBooksTable), BorderLayout.CENTER);
+
+        // Borrowed Books
+        JPanel borrowedBooksPanel = new JPanel(new BorderLayout());
+        DefaultTableModel borrowedModel = new DefaultTableModel(new String[]{"Book ID", "Title", "Borrower"}, 0);
+        JTable borrowedBooksTable = new JTable(borrowedModel);
+        borrowedBooksPanel.add(new JScrollPane(borrowedBooksTable), BorderLayout.CENTER);
+
+        // Fine Reports
+        JTabbedPane fineReportsTabs = new JTabbedPane();
+
+        JPanel individualFinePanel = new JPanel(new BorderLayout());
+        DefaultTableModel individualFineModel = new DefaultTableModel(new String[]{"Student ID", "Name", "Total Fine"}, 0);
+        JTable individualFineTable = new JTable(individualFineModel);
+        individualFinePanel.add(new JScrollPane(individualFineTable), BorderLayout.CENTER);
+
+        JPanel monthlyFinePanel = new JPanel(new BorderLayout());
+        DefaultTableModel monthlyFineModel = new DefaultTableModel(new String[]{"Month", "Total Fine"}, 0);
+        JTable monthlyFineTable = new JTable(monthlyFineModel);
+        monthlyFinePanel.add(new JScrollPane(monthlyFineTable), BorderLayout.CENTER);
+
+        fineReportsTabs.addTab("Individual Fine Report", individualFinePanel);
+        fineReportsTabs.addTab("Monthly Fine Report", monthlyFinePanel);
+
+        reportsTabs.addTab("Available Books", availableBooksPanel);
+        reportsTabs.addTab("Borrowed Books", borrowedBooksPanel);
+        reportsTabs.addTab("Fine Reports", fineReportsTabs);
+
+        reportsPanel.add(reportsTabs, BorderLayout.CENTER);
+    }
+
+
+    private void createFineManagementTab() {
+        fineManagementPanel = new JPanel(new BorderLayout()); // Store in instance variable
+
+        // Table for fines
+        DefaultTableModel fineModel = new DefaultTableModel(new String[]{"Student ID", "Book ID", "Fine Amount"}, 0);
+        JTable fineTable = new JTable(fineModel);
+
+        // Buttons for editing and waiving fines
+        JButton editFineButton = new JButton("Edit Fine");
+        JButton waiveFineButton = new JButton("Waive Off Fine");
+
+        // Button panel
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(editFineButton);
+        buttonPanel.add(waiveFineButton);
+
+        // Add components to the fineManagementPanel
+        fineManagementPanel.add(new JScrollPane(fineTable), BorderLayout.CENTER);
+        fineManagementPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Action listeners for buttons
+        editFineButton.addActionListener(e -> {
+            // Logic for editing fine
+        });
+
+        waiveFineButton.addActionListener(e -> {
+            // Logic for waiving off fine
+        });
+
+        // Load data (uncomment and implement when needed)
+        // loadFines(fineModel);
+    }
+
+
+//    private void createReportsTab() { reportsPanel = createPlaceholderPanel("System Reports - To be implemented"); }
+//    private void createFineManagementTab() { fineManagementPanel = createPlaceholderPanel("Fine Management - To be implemented"); }
+
+
     private JPanel createPlaceholderPanel(String text) {
-         JPanel panel = new JPanel(new GridBagLayout());
+        JPanel panel = new JPanel(new GridBagLayout());
         JLabel label = new JLabel(text); label.setFont(new Font("Arial", Font.ITALIC, 16));
         label.setHorizontalAlignment(SwingConstants.CENTER);
         panel.add(label); return panel;
-    }
-    private void createLogoutTab() {
-        logoutPanel = new JPanel(new GridBagLayout()); logoutButton = new JButton("Logout");
-        logoutButton.setPreferredSize(new Dimension(150, 40)); logoutButton.setFont(new Font("Arial", Font.BOLD, 14));
-        logoutButton.addActionListener(this);
-        GridBagConstraints gbc = new GridBagConstraints(); logoutPanel.add(logoutButton, gbc);
     }
 
     // --- Action Listener Implementation ---
@@ -252,10 +334,10 @@ public class AdminDashboard extends JFrame implements ActionListener {
 
         // Prevent redundant actions or self-deactivation
         if ((activate && "Active".equalsIgnoreCase(currentStatus)) || (!activate && "Inactive".equalsIgnoreCase(currentStatus))) {
-             showInfo("User '" + username + "' already has status '" + currentStatus + "'."); return;
+            showInfo("User '" + username + "' already has status '" + currentStatus + "'."); return;
         }
         if (!activate && username.equals(session.getUsername())) {
-             showWarning("You cannot deactivate your own admin account."); return;
+            showWarning("You cannot deactivate your own admin account."); return;
         }
 
         String action = activate ? "Activate" : "Deactivate";
@@ -297,7 +379,7 @@ public class AdminDashboard extends JFrame implements ActionListener {
             showWarning("Please fill in all librarian details."); return;
         }
         if (!isValidEmail(email)) { // Basic email format check
-             showWarning("Please enter a valid email address."); return;
+            showWarning("Please enter a valid email address."); return;
         }
 
         addLibrarianButton.setEnabled(false);
@@ -324,7 +406,7 @@ public class AdminDashboard extends JFrame implements ActionListener {
         worker.execute();
     }
 
-     private void handleDeleteLibrarian() {
+    private void handleDeleteLibrarian() {
         int selectedRow = librariansTable.getSelectedRow();
         if (selectedRow == -1) { showWarning("Please select a librarian to delete."); return; }
         int modelRow = librariansTable.convertRowIndexToModel(selectedRow);
@@ -332,13 +414,13 @@ public class AdminDashboard extends JFrame implements ActionListener {
         String librarianName = (String) librariansTableModel.getValueAt(modelRow, 1);
         String librarianUsername = (String) librariansTableModel.getValueAt(modelRow, 2);
 
-         if (librarianUsername.equals(session.getUsername())) {
-             showWarning("Cannot delete your own account record."); return;
-         }
+        if (librarianUsername.equals(session.getUsername())) {
+            showWarning("Cannot delete your own account record."); return;
+        }
 
         int confirm = JOptionPane.showConfirmDialog(this,
-            "Delete librarian:\nID: " + librarianId + "\nName: " + librarianName + "\nUsername: " + librarianUsername + "\n\nThis also deletes their login.",
-            "Confirm Deletion", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                "Delete librarian:\nID: " + librarianId + "\nName: " + librarianName + "\nUsername: " + librarianUsername + "\n\nThis also deletes their login.",
+                "Confirm Deletion", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
         if (confirm != JOptionPane.YES_OPTION) return;
 
         deleteLibrarianButton.setEnabled(false);
@@ -353,7 +435,7 @@ public class AdminDashboard extends JFrame implements ActionListener {
                         loadAllLibrarians(); loadAllUsers();
                     } else { showError("Failed to delete librarian '" + librarianName + "'."); }
                 } catch (Exception e) { handleLoadingError(e, "deleting librarian"); }
-                 finally { deleteLibrarianButton.setEnabled(true); }
+                finally { deleteLibrarianButton.setEnabled(true); }
             }
         };
         worker.execute();
@@ -377,8 +459,8 @@ public class AdminDashboard extends JFrame implements ActionListener {
             @Override protected List<Object[]> doInBackground() throws Exception {
                 // TODO: Enhance AdminService.getAllUsers to accept a search term
                 // For now, it loads all users. Filtering happens visually via sorter.
-                 // If implementing search in backend:
-                 // return adminService.searchUsers(searchTerm);
+                // If implementing search in backend:
+                // return adminService.searchUsers(searchTerm);
                 return adminService.getAllUsers(); // Current implementation
             }
             @Override protected void done() {
@@ -395,27 +477,27 @@ public class AdminDashboard extends JFrame implements ActionListener {
         worker.execute();
     }
 
-     // Helper to apply filtering to the user table *after* loading all data
-     // Ideally, filtering should be done in the SQL query for large datasets
+    // Helper to apply filtering to the user table after loading all data
+    // Ideally, filtering should be done in the SQL query for large datasets
     private void applyUserFilter(String searchTerm) {
-         TableRowSorter<DefaultTableModel> sorter = (TableRowSorter<DefaultTableModel>) usersTable.getRowSorter();
-         if (sorter == null) { // Create sorter if it doesn't exist
-             sorter = new TableRowSorter<>(usersTableModel);
-             usersTable.setRowSorter(sorter);
-         }
-         if (searchTerm.isEmpty()) {
-             sorter.setRowFilter(null); // Remove filter
-         } else {
-             // Filter based on username (col 0) or email (col 3), case-insensitive
-             // Multiple column filter: RowFilter.orFilter(...)
-             try {
-                  RowFilter<DefaultTableModel, Object> rf = RowFilter.regexFilter("(?i)" + searchTerm, 0, 3); // Case-insensitive regex on cols 0 and 3
-                  sorter.setRowFilter(rf);
-             } catch (java.util.regex.PatternSyntaxException e) {
-                 System.err.println("Invalid regex pattern in search: " + searchTerm);
-                 sorter.setRowFilter(null); // Clear filter on invalid pattern
-             }
-         }
+        TableRowSorter<DefaultTableModel> sorter = (TableRowSorter<DefaultTableModel>) usersTable.getRowSorter();
+        if (sorter == null) { // Create sorter if it doesn't exist
+            sorter = new TableRowSorter<>(usersTableModel);
+            usersTable.setRowSorter(sorter);
+        }
+        if (searchTerm.isEmpty()) {
+            sorter.setRowFilter(null); // Remove filter
+        } else {
+            // Filter based on username (col 0) or email (col 3), case-insensitive
+            // Multiple column filter: RowFilter.orFilter(...)
+            try {
+                RowFilter<DefaultTableModel, Object> rf = RowFilter.regexFilter("(?i)" + searchTerm, 0, 3); // Case-insensitive regex on cols 0 and 3
+                sorter.setRowFilter(rf);
+            } catch (java.util.regex.PatternSyntaxException e) {
+                System.err.println("Invalid regex pattern in search: " + searchTerm);
+                sorter.setRowFilter(null); // Clear filter on invalid pattern
+            }
+        }
     }
 
 
@@ -454,7 +536,7 @@ public class AdminDashboard extends JFrame implements ActionListener {
     private boolean isValidEmail(String email) {
         if (email == null || email.isEmpty()) return false;
         // Simple regex for basic format check - not foolproof
-        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+        String emailRegex = "^[a-zA-Z0-9_+&-]+(?:\\.[a-zA-Z0-9_+&-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
         return email.matches(emailRegex);
     }
 
