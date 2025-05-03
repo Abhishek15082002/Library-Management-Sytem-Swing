@@ -2,11 +2,17 @@ package library.frontend;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.io.File;
+import javax.imageio.ImageIO;
+import java.io.IOException;
+import java.awt.image.BufferedImage;
 
 import library.DatabaseConnection;
 import library.UserSession;
@@ -21,12 +27,62 @@ public class LoginFrame extends JFrame implements ActionListener {
     private JButton signUpButton;
     private JLabel statusLabel;
 
+    private static class RoundedBorder implements javax.swing.border.Border {
+        private int radius;
+
+        RoundedBorder(int radius) {
+            this.radius = radius;
+        }
+
+        public Insets getBorderInsets(Component c) {
+            return new Insets(this.radius + 1, this.radius + 1, this.radius + 2, this.radius);
+        }
+
+        public boolean isBorderOpaque() {
+            return true;
+        }
+
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.drawRoundRect(x, y, width - 1, height - 1, radius, radius);
+        }
+    }
+
     public LoginFrame() {
         setTitle("Smart Library - Login");
-        setSize(600, 500);
+        setSize(500, 450);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(10, 10));
+
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 10)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g;
+                Color color1 = new Color(220, 230, 240); // Light gray-blue
+                Color color2 = new Color(245, 245, 245); // Very light gray
+                GradientPaint gp = new GradientPaint(0, 0, color1, 0, getHeight(), color2);
+                g2d.setPaint(gp);
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+            }
+        };
+        add(mainPanel);
+
+        JPanel logoPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JLabel logoLabel = new JLabel();
+        try {
+            BufferedImage img = ImageIO.read(new File("C:\\Users\\DELL\\OneDrive\\Desktop\\Books app icon.jpeg")); // Replace with the actual path to your image
+            ImageIcon imageIcon = new ImageIcon(img.getScaledInstance(150, 100, Image.SCALE_SMOOTH)); // Adjust width and height as needed
+            logoLabel.setIcon(imageIcon);
+        } catch (IOException e) {
+            System.err.println("Error loading logo image: " + e.getMessage());
+            logoLabel.setText("Library Logo"); // Fallback text if image fails to load
+            logoLabel.setFont(new Font("SansSerif", Font.BOLD, 28));
+        }
+        logoPanel.add(logoLabel);
+        mainPanel.add(logoPanel, BorderLayout.NORTH);
 
         JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         statusLabel = new JLabel("Please select role and enter credentials.", SwingConstants.CENTER);
@@ -36,58 +92,84 @@ public class LoginFrame extends JFrame implements ActionListener {
 
         JPanel inputPanel = new JPanel(new GridBagLayout());
         inputPanel.setBorder(BorderFactory.createEmptyBorder(10, 40, 10, 40));
+        inputPanel.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(8, 8, 8, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.WEST;
-        inputPanel.add(new JLabel("Select User Type:"), gbc);
+        JLabel userTypeLabel = new JLabel("User Type:"); // More descriptive labels
+        userTypeLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        inputPanel.add(userTypeLabel, gbc);
         gbc.gridx = 1; gbc.gridy = 0; gbc.weightx = 1.0;
         userTypeDropdown = new JComboBox<>(new String[]{"Student", "Librarian", "Admin"});
+        userTypeDropdown.setPreferredSize(new Dimension(150, 30));
+        userTypeDropdown.setBackground(Color.WHITE);
         inputPanel.add(userTypeDropdown, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1; gbc.anchor = GridBagConstraints.WEST; gbc.weightx = 0.0;
-        inputPanel.add(new JLabel("Username:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 1; gbc.anchor = GridBagConstraints.WEST;
+        JLabel usernameLabel = new JLabel("Username:");
+        usernameLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        inputPanel.add(usernameLabel, gbc);
         gbc.gridx = 1; gbc.gridy = 1; gbc.weightx = 1.0;
         usernameField = new JTextField();
+        usernameField.setPreferredSize(new Dimension(150, 30));
+        usernameField.setBackground(Color.WHITE);
         inputPanel.add(usernameField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 2; gbc.anchor = GridBagConstraints.WEST; gbc.weightx = 0.0;
-        inputPanel.add(new JLabel("Password:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 2; gbc.anchor = GridBagConstraints.WEST;
+        JLabel passwordLabel = new JLabel("Password:");
+        passwordLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        inputPanel.add(passwordLabel, gbc);
         gbc.gridx = 1; gbc.gridy = 2; gbc.weightx = 1.0;
         passwordField = new JPasswordField();
+        passwordField.setPreferredSize(new Dimension(150, 30));
+        passwordField.setBackground(Color.WHITE);
         passwordField.addActionListener(this);
         inputPanel.add(passwordField, gbc);
 
-        add(inputPanel, BorderLayout.CENTER);
+        mainPanel.add(inputPanel, BorderLayout.CENTER);
 
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 5));
+        bottomPanel.setOpaque(false);
         loginButton = new JButton("Login");
-        loginButton.setPreferredSize(new Dimension(100, 30));
+        loginButton.setPreferredSize(new Dimension(100, 35));
         loginButton.addActionListener(this);
+
+        loginButton.setBackground(new Color(70, 130, 180)); // Light Blue
+        loginButton.setForeground(Color.WHITE);
+        loginButton.setFocusPainted(false);
+        loginButton.setBorder(new RoundedBorder(10));
 
         forgotButton = new JButton("Forgot Password?");
         forgotButton.setBorderPainted(false);
         forgotButton.setOpaque(false);
-        forgotButton.setBackground(UIManager.getColor("Label.background"));
-        forgotButton.setForeground(Color.BLUE);
+        forgotButton.setBackground(new Color(240, 240, 240)); // Light gray
+        forgotButton.setForeground(new Color(100, 149, 237));
         forgotButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         forgotButton.setFocusPainted(false);
         forgotButton.addActionListener(this);
+        forgotButton.setBorder(new RoundedBorder(10));
+        forgotButton.setBackground(new Color(221, 160, 221)); // Plum
+        forgotButton.setForeground(new Color(75, 0, 130));
 
         signUpButton = new JButton("New here? Sign up");
         signUpButton.setBorderPainted(false);
         signUpButton.setOpaque(false);
-        signUpButton.setBackground(UIManager.getColor("Label.background"));
-        signUpButton.setForeground(Color.BLUE);
+        signUpButton.setBackground(new Color(240, 240, 240)); // Light gray
+        signUpButton.setForeground(new Color(100, 149, 237));
         signUpButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         signUpButton.setFocusPainted(false);
         signUpButton.addActionListener(this);
 
+        signUpButton.setBorder(new RoundedBorder(10));
+        signUpButton.setBackground(new Color(221, 160, 221)); // Plum
+        signUpButton.setForeground(new Color(75, 0, 130));
+
         bottomPanel.add(loginButton);
         bottomPanel.add(forgotButton);
         bottomPanel.add(signUpButton);
-        add(bottomPanel, BorderLayout.SOUTH);
+        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
 
         setVisible(true);
     }
