@@ -6,9 +6,11 @@ import java.util.List;
 
 import library.DatabaseConnection;
 
+import javax.swing.*;
+
 public class LibrarianService {
 
-    private String getSettingValue(String key, String defaultValue) {
+    private static String getSettingValue(String key, String defaultValue) {
         String sql = "SELECT setting_value FROM Settings WHERE setting_key = ?";
         Connection conn = null;
         try {
@@ -28,17 +30,17 @@ public class LibrarianService {
         return defaultValue;
     }
 
-    private int getSettingValueInt(String key, int defaultValue) {
+    private static int getSettingValueInt(String key, int defaultValue) {
         try { return Integer.parseInt(getSettingValue(key, String.valueOf(defaultValue))); }
         catch (NumberFormatException e) { System.err.println("Invalid int format for setting '" + key + "'. Using default."); return defaultValue; }
     }
 
-    private double getSettingValueDouble(String key, double defaultValue) {
+    private static double getSettingValueDouble(String key, double defaultValue) {
         try { return Double.parseDouble(getSettingValue(key, String.valueOf(defaultValue))); }
         catch (NumberFormatException e) { System.err.println("Invalid double format for setting '" + key + "'. Using default."); return defaultValue; }
     }
 
-    public List<Object[]> getAllBooks(String librarianId,String searchTerm) throws SQLException {
+    public static List<Object[]> getAllBooks(String searchTerm) throws SQLException {
         List<Object[]> books = new ArrayList<>();
         // ... (rest of method implementation using DatabaseConnection) ...
         String sql = "SELECT book_id, title, author, category, total_copies, available_copies " +
@@ -90,15 +92,13 @@ public class LibrarianService {
 
     }
 
-    public List<Object[]> getAllIssuedBooks(String searchTerm) throws SQLException {
+    public static List<Object[]> getAllIssuedBooks(String searchTerm) throws SQLException {
         List<Object[]> issuedBooks = new ArrayList<>();
 
-        String sql = "SELECT i.issue_id, b.book_id, b.title, s.student_id, " +
+        String sql = "SELECT b.book_id, b.title, i.student_id, " +
                 "i.issue_date, i.due_date, i.return_date, i.status " +
-                "FROM Issues i " +
-                "JOIN Books b ON i.book_id = b.book_id " +
-                "JOIN Students s ON i.student_id = s.student_id " +
-                "WHERE i.status IN ('Issued', 'Overdue') ";
+                "FROM IssuedBooks i " +
+                "JOIN Books b ON i.book_id = b.book_id ";
 
         boolean searching = searchTerm != null && !searchTerm.trim().isEmpty();
         if (searching) {
@@ -153,9 +153,9 @@ public class LibrarianService {
         return issuedBooks;
     }
 
-    public boolean issueBookToStudent(String bookId, String studentId) throws SQLException {
+    public static boolean issueBookToStudent(String bookId, String studentId) throws SQLException {
         Connection conn = null;
-        int borrowingPeriodDays = 14;
+        int borrowingPeriodDays = getSettingValueInt("DefaultBorrowingPeriodDays",14);
         boolean autoCommitOriginal = false;
 
         try {
@@ -256,7 +256,7 @@ public class LibrarianService {
         }
     }
 
-    public boolean returnBook( String bookId, String studentId) throws SQLException {
+    public static boolean returnBook( String bookId, String studentId) throws SQLException {
         Connection conn = null;
         boolean autoCommitOriginal = false;
 
@@ -332,7 +332,7 @@ public class LibrarianService {
         }
     }
 
-    public boolean reissueBook(String bookId, String studentId) throws SQLException {
+    public static boolean reissueBook(String bookId, String studentId) throws SQLException {
         Connection conn = null;
         boolean autoCommitOriginal = false;
 
@@ -432,7 +432,10 @@ public class LibrarianService {
         }
     }
 
-    public boolean addBook(String bookId, String title, String author, String category, int totalCopies) throws SQLException {
+    private static String generateNextBookId() throws SQLException {
+        String lastId = null;
+        int nextNumericId = 1;
+
         Connection conn = null;
         try {
             conn = DatabaseConnection.getConnection();
@@ -440,17 +443,20 @@ public class LibrarianService {
                 throw new SQLException("Database connection failed or is closed.");
             }
 
-            String sql = "INSERT INTO Books (book_id, title, author, category, total_copies, available_copies) VALUES (?, ?, ?, ?, ?, ?)";
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setString(1, bookId);
-                pstmt.setString(2, title);
-                pstmt.setString(3, author);
-                pstmt.setString(4, category);
-                pstmt.setInt(5, totalCopies);
-                pstmt.setInt(6, totalCopies); // Initially available copies are the same as total copies
-                int rowsAffected = pstmt.executeUpdate();
-                return rowsAffected > 0;
+            String query = "SELECT book_id FROM Books ORDER BY book_id DESC LIMIT 1";
+            try (PreparedStatement pstmt = conn.prepareStatement(query);
+                 ResultSet rs = pstmt.executeQuery()) {
+
+                if (rs.next()) {
+                    lastId = rs.getString("book_id");
+                    if (lastId != null && lastId.matches("B\\d{3}")) {
+                        // Extract the numeric part and increment
+                        nextNumericId = Integer.parseInt(lastId.substring(1)) + 1;
+                    }
+                }
             }
+        } catch (SQLException e) {
+            throw new SQLException("Failed to generate the next book ID: " + e.getMessage(), e);
         } finally {
             if (conn != null) {
                 try {
@@ -462,19 +468,71 @@ public class LibrarianService {
                 }
             }
         }
+
+        // Format new ID with leading zeros
+        return String.format("B%03d", nextNumericId);
     }
 
-    public List<Object[]> getAllStudents( String searchTerm) throws SQLException {
+    public static void addBook(String title, String author, String category, int totalCopies) throws SQLException {
+        System.out.println("Adding " + title + " to " + author + " by " + category);
+        Connection conn = null;
+            String bookId;
+            try {
+                bookId = generateNextBookId();
+            } catch (SQLException e) {
+                throw new SQLException("Failed to generate the next book ID: " + e.getMessage(), e);
+            }
+
+        try {
+            conn = DatabaseConnection.getConnection();
+            if (conn == null || conn.isClosed()) {
+                throw new SQLException("Database connection failed or is closed.");
+            }
+
+
+            String sql = "INSERT INTO Books (book_id, title, author, category, total_copies, available_copies) VALUES (?, ?, ?, ?, ?, ?)";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                System.out.println("Inside try block");
+                pstmt.setString(1, bookId);
+                pstmt.setString(2, title);
+                pstmt.setString(3, author);
+                pstmt.setString(4, category);
+                pstmt.setInt(5, totalCopies);
+                pstmt.setInt(6, totalCopies); // Initially available copies are the same as total copies
+                int rowsAffected = pstmt.executeUpdate();
+                System.out.println(rowsAffected);
+
+            }
+            catch (SQLException ex) {
+                System.out.println("SQL Error: " + ex.getMessage());
+                throw ex;
+            }
+
+        } finally {
+            if (conn != null) {
+                try {
+                    if (!conn.isClosed()) {
+                        conn.close();
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return;
+    }
+
+    public static List<Object[]> getAllStudents( String searchTerm) throws SQLException {
         List<Object[]> students = new ArrayList<>();
-        String sql = "SELECT s.student_id, s.name, u.email " +
-                "FROM Students s JOIN Users u ON s.student_id = u.username " +
-                "ORDER BY s.student_id";
+        String sql = "SELECT s.student_id, s.name,s.username, u.email " +
+                "FROM Students s JOIN Users u ON s.username = u.username ";
 
         boolean searching = searchTerm != null && !searchTerm.trim().isEmpty();
         if (searching) {
             sql += "AND (LOWER(student_id) LIKE LOWER(?) OR LOWER(name) LIKE LOWER(?) OR LOWER(email) LIKE LOWER(?))";
         }
-        sql += " ORDER BY name";
+        sql +=  "ORDER BY s.student_id";
         Connection conn = null;
         try {
             conn = DatabaseConnection.getConnection();
@@ -503,13 +561,192 @@ public class LibrarianService {
         return students;
     }
 
+    public static double calculateFine(String bookId, String studentId) throws SQLException {
+        Connection conn = null;
+        double fine = 0.0;
 
-    private LocalDate calculateDueDate(LocalDate issueDate) {
+        try {
+            conn = DatabaseConnection.getConnection();
+            if (conn == null || conn.isClosed()) {
+                throw new SQLException("Database connection failed or is closed.");
+            }
+
+            String sql = "SELECT DATEDIFF(CURRENT_DATE, due_date) AS overdue_days " +
+                    "FROM IssuedBooks WHERE book_id = ? AND student_id = ? AND status = 'Issued'";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, bookId);
+                pstmt.setString(2, studentId);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
+                        int overdueDays = rs.getInt("overdue_days");
+                        if (overdueDays > 0) {
+                            double finePerDay = getSettingValueDouble("SETTING_FINE_PER_DAY", 1.0);
+                            fine = overdueDays * finePerDay;
+                            JOptionPane.showMessageDialog(null, "Book has been overdue for " + overdueDays+ " days.", "Overdue", JOptionPane.INFORMATION_MESSAGE);
+                        }
+                    }
+                }
+            }
+        } finally {
+            if (conn != null) {
+                try {
+                    if (!conn.isClosed()) {
+                        conn.close();
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return fine;
+    }
+
+    private static LocalDate calculateDueDate(LocalDate issueDate) {
         int borrowPeriod = getSettingValueInt("SETTING_BORROW_PERIOD", 14 );
         return issueDate.plusDays(borrowPeriod);
     }
 
-    public boolean removeBook(String bookId) throws SQLException {
+    public static List<Object[]> getOverdueBooks() throws SQLException {
+        List<Object[]> overdueBooks = new ArrayList<>();
+        String sql = "SELECT b.book_id, b.title, s.username, i.due_date " +
+                "FROM IssuedBooks i "+
+                "JOIN Books b ON i.book_id = b.book_id " +
+                "Join Students s on i.student_id = s.student_id "+
+                "WHERE (i.status = 'Issued' OR i.status = 'Overdue') AND i.due_date < CURRENT_DATE";
+
+        Connection conn = null;
+        try {
+            conn = DatabaseConnection.getConnection();
+            if (conn == null || conn.isClosed()) {
+                throw new SQLException("Database connection failed or is closed.");
+            }
+            try (PreparedStatement pstmt = conn.prepareStatement(sql);
+                 ResultSet rs = pstmt.executeQuery()) {
+
+                while (rs.next()) {
+                    overdueBooks.add(new Object[]{
+                            rs.getString("book_id"), rs.getString("title"),
+                            rs.getString("username"), rs.getDate("due_date")
+                    });
+                }
+            }
+        } finally {
+            if (conn != null) {
+                try {
+                    if (!conn.isClosed()) {
+                        conn.close();
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return overdueBooks;
+    }
+
+    //todo  to be used every time issued book table is accessed
+
+    public static void updateIssuedBookStatus(String bookId, String studentId, String status) throws SQLException {
+        Connection conn = null;
+        try {
+            conn = DatabaseConnection.getConnection();
+            if (conn == null || conn.isClosed()) {
+                throw new SQLException("Database connection failed or is closed.");
+            }
+
+            String sql = "UPDATE IssuedBooks SET status = ? WHERE book_id = ? AND student_id = ?";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, status);
+                pstmt.setString(2, bookId);
+                pstmt.setString(3, studentId);
+                pstmt.executeUpdate();
+            }
+        } finally {
+            if (conn != null) {
+                try {
+                    if (!conn.isClosed()) {
+                        conn.close();
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public static void sendNotifications(String studentId, String message, String type) throws SQLException {
+
+            Connection conn = DatabaseConnection.getConnection();
+
+            // Send notification to the student
+//            String message = "Dear Student, \n\nThe book '" + title + "' (ID: " + bookId + ") is overdue since " + dueDate + ". Please return it as soon as possible.\n\nThank you.";
+//
+            String querry = " INSERT INTO Notifications (user_id, message,type, created_at) VALUES (?, ?,?, CURRENT_DATE)";
+
+            try {
+                conn = DatabaseConnection.getConnection();
+                if (conn == null || conn.isClosed()) {
+                    throw new SQLException("Database connection failed or is closed.");
+                }
+
+                try (PreparedStatement pstmt = conn.prepareStatement(querry)) {
+                    pstmt.setString(1, studentId);
+                    pstmt.setString(2, message);
+                    pstmt.setString(3, type);
+                    pstmt.executeUpdate();
+                }
+            } catch (SQLException e) {
+                System.err.println("Error sending notification: " + e.getMessage());
+            } finally {
+                if (conn != null) {
+                    try {
+                        if (!conn.isClosed()) {
+                            conn.close();
+                        }
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+
+                System.out.println("Notification sent to student ID " + studentId + ": " + message);
+        }
+
+    public static boolean updateBook(String bookId, String title, String author, String category, int totalCopies, int available_copies) throws SQLException {
+        Connection conn = null;
+        try {
+            conn = DatabaseConnection.getConnection();
+            if (conn == null || conn.isClosed()) {
+                throw new SQLException("Database connection failed or is closed.");
+            }
+
+            String sql = "UPDATE Books SET title = ?, author = ?, category = ?, total_copies = ?, available_copies = ? WHERE book_id = ?";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, title);
+                pstmt.setString(2, author);
+                pstmt.setString(3, category);
+                pstmt.setInt(4, totalCopies);
+                pstmt.setInt(5, available_copies);
+                pstmt.setString(6, bookId);
+                int rowsAffected = pstmt.executeUpdate();
+                return rowsAffected > 0;
+            }
+        } finally {
+            if (conn != null) {
+                try {
+                    if (!conn.isClosed()) {
+                        conn.close();
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public static boolean removeBook(String bookId) throws SQLException {
         Connection conn = null;
         try {
             conn = DatabaseConnection.getConnection();
