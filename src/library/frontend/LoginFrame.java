@@ -2,8 +2,6 @@ package library.frontend;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 import java.awt.event.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -73,7 +71,7 @@ public class LoginFrame extends JFrame implements ActionListener {
         JPanel logoPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JLabel logoLabel = new JLabel();
         try {
-            BufferedImage img = ImageIO.read(new File("C:\\Users\\DELL\\OneDrive\\Desktop\\Books app icon.jpeg")); // Replace with the actual path to your image
+            BufferedImage img = ImageIO.read(new File("src\\assets\\Books app icon.jpeg"));
             ImageIcon imageIcon = new ImageIcon(img.getScaledInstance(150, 100, Image.SCALE_SMOOTH)); // Adjust width and height as needed
             logoLabel.setIcon(imageIcon);
         } catch (IOException e) {
