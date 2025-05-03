@@ -150,7 +150,7 @@ public class LoginFrame extends JFrame implements ActionListener {
                 pstmt.setString(1, username);
                 try (ResultSet rs = pstmt.executeQuery()) {
                     if (rs.next()) {
-                        String storedPasswordOrHash = rs.getString("password");
+                        String storedPassword = rs.getString("password");
                         String actualRole = rs.getString("role");
                         String status = rs.getString("status");
 
@@ -158,7 +158,7 @@ public class LoginFrame extends JFrame implements ActionListener {
                             showStatus("Role mismatch.", true);
                             return null;
                         }
-                        boolean passwordMatch = plainPassword.equals(storedPasswordOrHash);
+                        boolean passwordMatch = plainPassword.equals(storedPassword);
                         if (!passwordMatch) {
                             showStatus("Invalid password.", true);
                             return null;

@@ -74,7 +74,7 @@ public class SignUpFrame extends JFrame implements ActionListener {
         securityQuestionBox = new JComboBox<>(new String[] {
                 "What is your pet's name?",
                 "What is your mother's maiden name?",
-                "What is your favorite book?",
+                "What is your favourite book?",
                 "What was the name of your first school?"
         });
         formPanel.add(securityQuestionBox, gbc);

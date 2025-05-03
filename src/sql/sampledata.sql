@@ -24,7 +24,7 @@ INSERT INTO Settings (setting_key, setting_value) VALUES
 -- REMINDER: Generate hashes using PasswordUtils or similar and replace 'adminpass', etc.
 INSERT INTO Users (username, password, role, status, email, security_question, security_answer) VALUES
 ('admin', 'admin', 'Admin', 'Active', 'admin@library.com', NULL, NULL), -- Use plain 'admin' for testing if skipping hashing
-('lib1', 'librarian1', 'Librarian', 'Active', 'librarian1@library.com', 'What is your favorite book?', 'Dune'),
+('lib1', 'librarian1', 'Librarian', 'Active', 'librarian1@library.com', 'What is your favourite book?', 'Dune'),
 ('stu1', 'student1', 'Student', 'Active', 'student1@school.com', 'What city were you born in?', 'Metropolis'),
 ('stu2', 'student2', 'Student', 'Active', 'student2@school.com', 'What is your pet''s name?', 'Krypto'),
 ('stu3', 'student3', 'Student', 'Inactive', 'student3@school.com', NULL, NULL); -- Inactive student

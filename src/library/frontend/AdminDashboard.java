@@ -385,7 +385,7 @@ public class AdminDashboard extends JFrame implements ActionListener {
         addLibrarianButton.setEnabled(false);
         SwingWorker<String, Void> worker = new SwingWorker<>() {
             @Override protected String doInBackground() throws Exception {
-                // REMINDER: Replace plain password with hashed password logic here or in service
+                // TODO: Replace plain password with hashed password logic here or in service
                 return adminService.addLibrarian(username, password, name, email);
             }
             @Override protected void done() {

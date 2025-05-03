@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Backend service class for handling student-related database operations and logic.
  */
-public class StudentService { // Ensure class is public
+public class StudentService {
 
     // Constants for Settings keys
     private static final String SETTING_BORROW_PERIOD = "DefaultBorrowingPeriodDays";
@@ -20,10 +20,8 @@ public class StudentService { // Ensure class is public
     private static final int DEFAULT_MAX_REISSUES = 2;
 
     // --- Methods like getAvailableBooks, getBorrowedBooks, getNotifications ---
-    // (Ensure DatabaseConnection is correctly resolved now)
     public List<Object[]> getAvailableBooks(String searchTerm) throws SQLException {
         List<Object[]> books = new ArrayList<>();
-        // ... (rest of method implementation using DatabaseConnection) ...
         String sql = "SELECT book_id, title, author, category, avg_rating, available_copies " +
                      "FROM Books WHERE available_copies > 0 ";
         boolean searching = searchTerm != null && !searchTerm.trim().isEmpty();
@@ -36,7 +34,6 @@ public class StudentService { // Ensure class is public
         try {
              conn = DatabaseConnection.getConnection(); // Should resolve now
              if (conn == null || conn.isClosed()) { throw new SQLException("Database connection failed or is closed."); }
-             // ... rest of try-with-resources ...
              try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 if (searching) {
                     String searchPattern = "%" + searchTerm.trim() + "%";
@@ -53,8 +50,9 @@ public class StudentService { // Ensure class is public
                     }
                 }
             }
-        } finally {
-             // Manage connection if necessary
+        } catch (SQLException e) {
+            System.err.println("Error fetching available books: " + e.getMessage());
+            throw e; 
         }
         return books;
 
@@ -62,7 +60,7 @@ public class StudentService { // Ensure class is public
 
      public List<Object[]> getBorrowedBooks(String studentId) throws SQLException {
         List<Object[]> borrowedBooks = new ArrayList<>();
-        // ... (rest of method implementation using DatabaseConnection) ...
+        
          String sql = "SELECT i.issue_id, i.book_id, b.title, i.issue_date, i.due_date, i.return_date, i.status, i.reissue_count, f.fine_amount " +
                      "FROM IssuedBooks i JOIN Books b ON i.book_id = b.book_id " +
                      "LEFT JOIN Fines f ON i.issue_id = f.issue_id AND f.status = 'Unpaid' " +
@@ -72,7 +70,7 @@ public class StudentService { // Ensure class is public
         try {
              conn = DatabaseConnection.getConnection(); // Should resolve now
              if (conn == null || conn.isClosed()) { throw new SQLException("Database connection failed or is closed."); }
-             // ... rest of try-with-resources ...
+            
               try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setString(1, studentId);
                 try (ResultSet rs = pstmt.executeQuery()) {
@@ -95,14 +93,12 @@ public class StudentService { // Ensure class is public
 
     public List<Object[]> getNotifications(String username) throws SQLException {
         List<Object[]> notifications = new ArrayList<>();
-        // ... (rest of method implementation using DatabaseConnection) ...
          String sql = "SELECT notification_id, created_at, type, message, is_read " +
                      "FROM Notifications WHERE user_id = ? ORDER BY created_at DESC";
         Connection conn = null;
         try {
             conn = DatabaseConnection.getConnection(); // Should resolve now
             if (conn == null || conn.isClosed()) { throw new SQLException("Database connection failed or is closed."); }
-            // ... rest of try-with-resources ...
              try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setString(1, username);
                 try (ResultSet rs = pstmt.executeQuery()) {
@@ -135,7 +131,6 @@ public class StudentService { // Ensure class is public
         try {
             conn = DatabaseConnection.getConnection(); // Should resolve now
             if (conn == null || conn.isClosed()) { throw new SQLException("Database connection failed or is closed."); }
-            // ... rest of borrow logic ...
              conn.setAutoCommit(false); // Start transaction
 
             // 1. Check availability (lock row)
@@ -191,7 +186,6 @@ public class StudentService { // Ensure class is public
         try {
             conn = DatabaseConnection.getConnection(); // Should resolve now
             if (conn == null || conn.isClosed()) { throw new SQLException("Database connection failed or is closed."); }
-            // ... rest of return logic ...
             conn.setAutoCommit(false); // Start transaction
 
             LocalDate returnDate = LocalDate.now();
@@ -281,7 +275,6 @@ public class StudentService { // Ensure class is public
         try {
              conn = DatabaseConnection.getConnection(); // Should resolve now
              if (conn == null || conn.isClosed()) { throw new SQLException("Database connection failed or is closed."); }
-             // ... rest of method ...
              try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setInt(1, issueId);
                 try (ResultSet rs = pstmt.executeQuery()) {
@@ -302,7 +295,6 @@ public class StudentService { // Ensure class is public
 
      public int markFinesPaid(List<Integer> fineIds) throws SQLException {
          if (fineIds == null || fineIds.isEmpty()) { return 0; }
-         // ... build IN clause ...
          StringBuilder sqlBuilder = new StringBuilder("UPDATE Fines SET status = 'Paid' WHERE fine_id IN (");
         for (int i = 0; i < fineIds.size(); i++) {
             sqlBuilder.append("?");
@@ -316,7 +308,6 @@ public class StudentService { // Ensure class is public
         try {
             conn = DatabaseConnection.getConnection(); // Should resolve now
             if (conn == null || conn.isClosed()) { throw new SQLException("Database connection failed or is closed."); }
-            // ... rest of method ...
              conn.setAutoCommit(false); // Use transaction
 
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -347,7 +338,6 @@ public class StudentService { // Ensure class is public
         try {
              conn = DatabaseConnection.getConnection(); // Should resolve now
              if (conn == null || conn.isClosed()) { throw new SQLException("Database connection failed or is closed."); }
-             // ... rest of method ...
               try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setString(1, studentId);
                 pstmt.setString(2, title);
@@ -366,7 +356,6 @@ public class StudentService { // Ensure class is public
         try {
              conn = DatabaseConnection.getConnection(); // Should resolve now
              if (conn == null || conn.isClosed()) { throw new SQLException("Database connection failed or is closed."); }
-             // ... rest of method ...
              try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setInt(1, notificationId);
                 pstmt.setString(2, username);
@@ -386,7 +375,6 @@ public class StudentService { // Ensure class is public
         try {
              conn = DatabaseConnection.getConnection(); // Should resolve now
              if (conn == null || conn.isClosed()) { throw new SQLException("Database connection failed."); }
-             // ... rest of method ...
              try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setInt(1, issueId);
                 try (ResultSet rs = pstmt.executeQuery()) {
@@ -454,7 +442,6 @@ public class StudentService { // Ensure class is public
         try {
              conn = DatabaseConnection.getConnection(); // Should resolve now
              if (conn == null || conn.isClosed()) { throw new SQLException("Database connection failed."); }
-             // ... rest of method ...
              try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setString(1, key);
                 try (ResultSet rs = pstmt.executeQuery()) {

@@ -40,7 +40,7 @@ public class ForgetPassword extends JFrame implements ActionListener {
         questionDropdown = new JComboBox<>(new String[]{
                 "What is your pet's name?",
                 "What is your mother's maiden name?",
-                "What is your favorite book?",
+                "What is your favourite book?",
                 "What is your birthplace?"
         });
         mainPanel.add(questionDropdown, gbc);
