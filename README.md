@@ -1,5 +1,5 @@
 # Smart Library Management System (Java Swing)
-# Capstone Project | Object Oriented Programming CSEG2020
+# Capstone Project | Object Oriented Programming Lab CSEG2020
 ## Introduction
 
 This project is a desktop application developed in Java using the Swing GUI toolkit to create a comprehensive Library Management System. It allows different types of users (Administrators, Librarians, Students) to interact with the library's resources efficiently. The system facilitates book management, borrowing and returning processes, fine tracking, user management, and report generation.
