@@ -1,12 +1,8 @@
 package library; // Base package
 
 import javax.swing.*;
-import library.frontend.LoginFrame; // Import LoginFrame from the frontend sub-package
+import library.frontend.LoginFrame;
 
-/**
- * Main entry point for the Library Management System application.
- * Sets the look and feel and launches the LoginFrame GUI.
- */
 public class LoginPage {
 
     public static void main(String[] args) {

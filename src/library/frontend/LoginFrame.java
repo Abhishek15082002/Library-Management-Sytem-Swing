@@ -24,6 +24,8 @@ public class LoginFrame extends JFrame implements ActionListener {
     private JButton forgotButton;
     private JButton signUpButton;
     private JLabel statusLabel;
+    private JPanel inputPanel; // Declare inputPanel as a class member
+    private static final int BORDER_RADIUS = 10;
 
     private static class RoundedBorder implements javax.swing.border.Border {
         private int radius;
@@ -49,7 +51,7 @@ public class LoginFrame extends JFrame implements ActionListener {
 
     public LoginFrame() {
         setTitle("Smart Library - Login");
-        setSize(500, 450);
+        setSize(800, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(10, 10));
@@ -59,14 +61,38 @@ public class LoginFrame extends JFrame implements ActionListener {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2d = (Graphics2D) g;
-                Color color1 = new Color(220, 230, 240); // Light gray-blue
-                Color color2 = new Color(245, 245, 245); // Very light gray
-                GradientPaint gp = new GradientPaint(0, 0, color1, 0, getHeight(), color2);
-                g2d.setPaint(gp);
+                Color color = new Color(240, 240, 240); // Light gray
+                g2d.setColor(color);
                 g2d.fillRect(0, 0, getWidth(), getHeight());
             }
         };
         add(mainPanel);
+
+        JPanel imagePanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g;
+                try {
+                    BufferedImage img = ImageIO.read(new File("src\\assets\\Books app icon.jpeg")); // Use your image path
+                    // Keep original image size or scale as needed
+                    g2d.drawImage(img, 0, 0, getWidth(), getHeight(), this);
+                } catch (IOException e) {
+                    System.err.println("Error loading image: " + e.getMessage());
+                    // Handle error, e.g., draw a placeholder
+                    g2d.setColor(Color.LIGHT_GRAY);
+                    g2d.fillRect(0, 0, getWidth(), getHeight());
+                    g2d.setColor(Color.BLACK);
+                    g2d.drawString("Image Not Found", 10, 20);
+                }
+            }
+        };
+        imagePanel.setPreferredSize(new Dimension(400, getHeight())); // Half width
+        mainPanel.add(imagePanel, BorderLayout.WEST);
+
+        JPanel contentPanel = new JPanel(new BorderLayout());
+        contentPanel.setOpaque(false);
+        mainPanel.add(contentPanel, BorderLayout.CENTER);
 
         JPanel logoPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JLabel logoLabel = new JLabel();
@@ -80,12 +106,13 @@ public class LoginFrame extends JFrame implements ActionListener {
             logoLabel.setFont(new Font("SansSerif", Font.BOLD, 28));
         }
         logoPanel.add(logoLabel);
-        mainPanel.add(logoPanel, BorderLayout.NORTH);
+        logoPanel.setOpaque(false);
+        contentPanel.add(logoPanel, BorderLayout.NORTH);
 
         JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         statusLabel = new JLabel("Please select role and enter credentials.", SwingConstants.CENTER);
         statusLabel.setForeground(Color.DARK_GRAY);
-        statusPanel.add(statusLabel);
+        statusPanel.setOpaque(false);
         add(statusPanel, BorderLayout.NORTH);
 
         JPanel inputPanel = new JPanel(new GridBagLayout());
@@ -101,7 +128,7 @@ public class LoginFrame extends JFrame implements ActionListener {
         inputPanel.add(userTypeLabel, gbc);
         gbc.gridx = 1; gbc.gridy = 0; gbc.weightx = 1.0;
         userTypeDropdown = new JComboBox<>(new String[]{"Student", "Librarian", "Admin"});
-        userTypeDropdown.setPreferredSize(new Dimension(150, 30));
+        userTypeDropdown.setPreferredSize(new Dimension(200, 30));
         userTypeDropdown.setBackground(Color.WHITE);
         inputPanel.add(userTypeDropdown, gbc);
 
@@ -111,7 +138,7 @@ public class LoginFrame extends JFrame implements ActionListener {
         inputPanel.add(usernameLabel, gbc);
         gbc.gridx = 1; gbc.gridy = 1; gbc.weightx = 1.0;
         usernameField = new JTextField();
-        usernameField.setPreferredSize(new Dimension(150, 30));
+        usernameField.setPreferredSize(new Dimension(200, 30));
         usernameField.setBackground(Color.WHITE);
         inputPanel.add(usernameField, gbc);
 
@@ -121,7 +148,7 @@ public class LoginFrame extends JFrame implements ActionListener {
         inputPanel.add(passwordLabel, gbc);
         gbc.gridx = 1; gbc.gridy = 2; gbc.weightx = 1.0;
         passwordField = new JPasswordField();
-        passwordField.setPreferredSize(new Dimension(150, 30));
+        passwordField.setPreferredSize(new Dimension(200, 30));
         passwordField.setBackground(Color.WHITE);
         passwordField.addActionListener(this);
         inputPanel.add(passwordField, gbc);
@@ -131,34 +158,33 @@ public class LoginFrame extends JFrame implements ActionListener {
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 5));
         bottomPanel.setOpaque(false);
         loginButton = new JButton("Login");
-        loginButton.setPreferredSize(new Dimension(100, 35));
+        loginButton.setPreferredSize(new Dimension(120, 35));
         loginButton.addActionListener(this);
+        loginButton.setFont(new Font("SansSerif", Font.BOLD, 16));
 
         loginButton.setBackground(new Color(70, 130, 180)); // Light Blue
         loginButton.setForeground(Color.WHITE);
         loginButton.setFocusPainted(false);
-        loginButton.setBorder(new RoundedBorder(10));
+        loginButton.setBorder(new RoundedBorder(BORDER_RADIUS));
 
         forgotButton = new JButton("Forgot Password?");
         forgotButton.setBorderPainted(false);
         forgotButton.setOpaque(false);
-        forgotButton.setBackground(new Color(240, 240, 240)); // Light gray
-        forgotButton.setForeground(new Color(100, 149, 237));
+        forgotButton.setBackground(new Color(221, 160, 221)); // Plum
+        forgotButton.setForeground(new Color(75, 0, 130));
         forgotButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         forgotButton.setFocusPainted(false);
         forgotButton.addActionListener(this);
         forgotButton.setBorder(new RoundedBorder(10));
-        forgotButton.setBackground(new Color(221, 160, 221)); // Plum
-        forgotButton.setForeground(new Color(75, 0, 130));
+        forgotButton.setFont(new Font("SansSerif", Font.PLAIN, 12));
 
         signUpButton = new JButton("New here? Sign up");
         signUpButton.setBorderPainted(false);
         signUpButton.setOpaque(false);
-        signUpButton.setBackground(new Color(240, 240, 240)); // Light gray
-        signUpButton.setForeground(new Color(100, 149, 237));
         signUpButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         signUpButton.setFocusPainted(false);
         signUpButton.addActionListener(this);
+        signUpButton.setFont(new Font("SansSerif", Font.PLAIN, 12));
 
         signUpButton.setBorder(new RoundedBorder(10));
         signUpButton.setBackground(new Color(221, 160, 221)); // Plum

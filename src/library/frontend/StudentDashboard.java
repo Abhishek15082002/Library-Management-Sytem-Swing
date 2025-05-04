@@ -46,6 +46,36 @@ public class StudentDashboard extends JFrame implements ActionListener {
     private final StudentService studentService; // Keep it final
     private final UserSession session; // Keep it final
 
+    private static final Color PRIMARY_COLOR = new Color(52, 152, 219);   // Blue
+    private static final Color SECONDARY_COLOR = new Color(236, 240, 241); // Light Gray
+    private static final Color ACCENT_COLOR = new Color(255, 107, 107);    // Red
+    private static final Font MAIN_FONT = new Font("Segoe UI", Font.PLAIN, 14);
+    private static final Font TITLE_FONT = new Font("Segoe UI", Font.BOLD, 24);
+    private static final Font SUBTITLE_FONT = new Font("Segoe UI", Font.BOLD, 16);
+    private static final int BORDER_RADIUS = 8;
+
+    private static class RoundedBorder extends javax.swing.border.AbstractBorder {
+        private int radius;
+        RoundedBorder(int radius) { this.radius = radius; }
+        @Override
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            Graphics2D g2d = (Graphics2D) g.create();
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.setColor(c.getForeground());
+            g2d.drawRoundRect(x, y, width - 1, height - 1, radius, radius);
+            g2d.dispose();
+        }
+        @Override
+        public Insets getBorderInsets(Component c) {
+            return new Insets(radius/2, radius/2, radius/2, radius/2);
+        }
+        @Override
+        public Insets getBorderInsets(Component c, Insets insets) {
+            insets.top = insets.left = insets.bottom = insets.right = radius/2;
+            return insets;
+        }
+    }
+
     // Updated Constructor based on user input
     public StudentDashboard() {
         // Get session first
@@ -78,6 +108,8 @@ public class StudentDashboard extends JFrame implements ActionListener {
         });
 
         mainTabbedPane = new JTabbedPane();
+        mainTabbedPane.setFont(MAIN_FONT);
+        mainTabbedPane.setBackground(SECONDARY_COLOR);
         notificationIds = new ArrayList<>(); // Initialize list
 
         // Create UI tabs
@@ -93,15 +125,21 @@ public class StudentDashboard extends JFrame implements ActionListener {
         mainTabbedPane.addTab("Notifications", notificationsPanel);
 
         JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(PRIMARY_COLOR);
         topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JLabel titleLabel = new JLabel("Student Dashboard - Welcome, " + session.getUsername());
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        titleLabel.setFont(TITLE_FONT);
+        titleLabel.setForeground(Color.WHITE);
         topPanel.add(titleLabel, BorderLayout.WEST);
 
         logoutButton = new JButton("Logout"); // Initialize
         logoutButton.setPreferredSize(new Dimension(120, 35));
-        logoutButton.setFont(new Font("Arial", Font.BOLD, 14));
+        logoutButton.setFont(MAIN_FONT);
+        logoutButton.setBackground(ACCENT_COLOR);
+        logoutButton.setForeground(Color.WHITE);
+        logoutButton.setFocusPainted(false);
+        logoutButton.setBorder(new RoundedBorder(BORDER_RADIUS));
         logoutButton.setToolTipText("Logout and return to the login screen.");
         logoutButton.addActionListener(this);
         topPanel.add(logoutButton, BorderLayout.EAST);
@@ -120,6 +158,11 @@ public class StudentDashboard extends JFrame implements ActionListener {
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         searchField = new JTextField(30);
         searchButton = new JButton("Search");
+        searchButton.setFont(MAIN_FONT);
+        searchButton.setBackground(PRIMARY_COLOR);
+        searchButton.setForeground(SECONDARY_COLOR);
+        searchButton.setFocusPainted(false);
+        searchButton.setBorder(new RoundedBorder(BORDER_RADIUS));
         searchButton.addActionListener(this);
         searchField.addActionListener(e -> searchButton.doClick());
         searchPanel.add(new JLabel("Search by Title/Author/Category:"));
@@ -129,12 +172,20 @@ public class StudentDashboard extends JFrame implements ActionListener {
         String[] availableBookColumns = {"Book ID", "Title", "Author", "Category", "Avg Rating", "Available"};
         availableBooksModel = new DefaultTableModel(availableBookColumns, 0) { @Override public boolean isCellEditable(int r, int c){ return false; }};
         availableBooksTable = new JTable(availableBooksModel);
+        availableBooksTable.setFont(MAIN_FONT);
+        availableBooksTable.getTableHeader().setFont(MAIN_FONT);
+        availableBooksTable.getTableHeader().setBackground(SECONDARY_COLOR);
         availableBooksTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         availableBooksTable.setAutoCreateRowSorter(true);
         JScrollPane scrollPane = new JScrollPane(availableBooksTable);
+        scrollPane.getViewport().setBackground(Color.WHITE);
         borrowBooksPanel.add(scrollPane, BorderLayout.CENTER);
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         borrowButton = new JButton("Borrow Selected Book");
+        borrowButton.setBackground(PRIMARY_COLOR);
+        borrowButton.setForeground(Color.WHITE);
+        borrowButton.setFocusPainted(false);
+        borrowButton.setBorder(new RoundedBorder(BORDER_RADIUS));
         borrowButton.addActionListener(this);
         actionPanel.add(borrowButton);
         borrowBooksPanel.add(actionPanel, BorderLayout.SOUTH);
@@ -151,8 +202,23 @@ public class StudentDashboard extends JFrame implements ActionListener {
         myBooksPanel.add(scrollPane, BorderLayout.CENTER);
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 5));
         returnButton = new JButton("Return Selected");
+        returnButton.setFont(MAIN_FONT);
+        returnButton.setBackground(PRIMARY_COLOR);
+        returnButton.setForeground(Color.WHITE);
+        returnButton.setFocusPainted(false);
+        returnButton.setBorder(new RoundedBorder(BORDER_RADIUS));
         reissueButton = new JButton("Reissue Selected");
+        reissueButton.setFont(MAIN_FONT);
+        reissueButton.setBackground(PRIMARY_COLOR);
+        reissueButton.setForeground(Color.WHITE);
+        reissueButton.setFocusPainted(false);
+        reissueButton.setBorder(new RoundedBorder(BORDER_RADIUS));
         viewFineButton = new JButton("View/Pay Fine");
+        viewFineButton.setFont(MAIN_FONT);
+        viewFineButton.setBackground(PRIMARY_COLOR);
+        viewFineButton.setForeground(Color.WHITE);
+        viewFineButton.setFocusPainted(false);
+        viewFineButton.setBorder(new RoundedBorder(BORDER_RADIUS));
         returnButton.setToolTipText("Mark the selected borrowed book as returned.");
         reissueButton.setToolTipText("Request to extend the due date for the selected book.");
         viewFineButton.setToolTipText("View details of any unpaid fines for the selected record.");
@@ -166,6 +232,7 @@ public class StudentDashboard extends JFrame implements ActionListener {
     }
     private void createRequestBooksTab() {
         requestBooksPanel = new JPanel(new GridBagLayout());
+        requestBooksPanel.setBackground(Color.WHITE);
         requestBooksPanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10); gbc.fill = GridBagConstraints.HORIZONTAL; gbc.anchor = GridBagConstraints.WEST;
@@ -176,9 +243,16 @@ public class StudentDashboard extends JFrame implements ActionListener {
         gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0.0; gbc.anchor = GridBagConstraints.NORTHWEST; requestBooksPanel.add(new JLabel("Reason (Optional):"), gbc);
         gbc.gridx = 1; gbc.gridy = 2; gbc.weightx = 1.0; gbc.weighty = 1.0; gbc.fill = GridBagConstraints.BOTH;
         requestReasonArea = new JTextArea(5, 30); requestReasonArea.setLineWrap(true); requestReasonArea.setWrapStyleWord(true);
+        requestReasonArea.setFont(MAIN_FONT);
         JScrollPane reasonScrollPane = new JScrollPane(requestReasonArea); requestBooksPanel.add(reasonScrollPane, gbc);
+        reasonScrollPane.getViewport().setBackground(ACCENT_COLOR);
         gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE; gbc.anchor = GridBagConstraints.CENTER; gbc.weighty = 0.0;
         submitRequestButton = new JButton("Submit Request"); submitRequestButton.addActionListener(this); requestBooksPanel.add(submitRequestButton, gbc);
+        submitRequestButton.setFont(MAIN_FONT);
+        submitRequestButton.setBackground(PRIMARY_COLOR);
+        submitRequestButton.setForeground(Color.WHITE);
+        submitRequestButton.setFocusPainted(false);
+        submitRequestButton.setBorder(new RoundedBorder(BORDER_RADIUS));
     }
     private void createNotificationsTab() {
         notificationsPanel = new JPanel(new BorderLayout(10, 10));
@@ -186,12 +260,21 @@ public class StudentDashboard extends JFrame implements ActionListener {
         String[] notificationColumns = {"Date", "Type", "Message", "Read"};
         notificationsModel = new DefaultTableModel(notificationColumns, 0){ @Override public boolean isCellEditable(int r, int c){ return false; }};
         notificationsTable = new JTable(notificationsModel);
+        notificationsTable.setFont(MAIN_FONT);
+        notificationsTable.getTableHeader().setFont(MAIN_FONT);
+        notificationsTable.getTableHeader().setBackground(SECONDARY_COLOR);
         notificationsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         notificationsTable.setAutoCreateRowSorter(true);
         JScrollPane scrollPane = new JScrollPane(notificationsTable);
+        scrollPane.getViewport().setBackground(Color.WHITE);
         notificationsPanel.add(scrollPane, BorderLayout.CENTER);
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         markReadButton = new JButton("Mark Selected as Read");
+        markReadButton.setFont(MAIN_FONT);
+        markReadButton.setBackground(PRIMARY_COLOR);
+        markReadButton.setForeground(Color.WHITE);
+        markReadButton.setFocusPainted(false);
+        markReadButton.setBorder(new RoundedBorder(BORDER_RADIUS));
         markReadButton.addActionListener(this);
         actionPanel.add(markReadButton);
         notificationsPanel.add(actionPanel, BorderLayout.SOUTH);

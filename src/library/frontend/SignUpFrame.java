@@ -7,6 +7,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 
 public class SignUpFrame extends JFrame implements ActionListener {
 
@@ -17,6 +19,27 @@ public class SignUpFrame extends JFrame implements ActionListener {
     private JButton signUpButton;
     private JLabel statusLabel;
 
+    private static class RoundedBorder implements javax.swing.border.Border {
+        private int radius;
+
+        RoundedBorder(int radius) {
+            this.radius = radius;
+        }
+
+        public Insets getBorderInsets(Component c) {
+            return new Insets(this.radius + 1, this.radius + 1, this.radius + 2, this.radius);
+        }
+
+        public boolean isBorderOpaque() {
+            return true;
+        }
+
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.drawRoundRect(x, y, width - 1, height - 1, radius, radius);
+        }
+    }
     public SignUpFrame() {
         setTitle("Smart Library - Sign Up");
         setSize(450, 450);
@@ -24,77 +47,128 @@ public class SignUpFrame extends JFrame implements ActionListener {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
 
-        // Status label
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 10)) { // Added mainPanel for background
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g;
+                Color color1 = new Color(220, 230, 240);
+                Color color2 = new Color(245, 245, 245);
+                GradientPaint gp = new GradientPaint(0, 0, color1, 0, getHeight(), color2);
+                g2d.setPaint(gp);
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+            }
+        };
+        add(mainPanel);
+
+        JPanel logoPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JLabel logoLabel = new JLabel();
+        logoPanel.add(logoLabel);
+        mainPanel.add(logoPanel, BorderLayout.NORTH);
+
+        JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         statusLabel = new JLabel("Create a new account", SwingConstants.CENTER);
-        statusLabel.setForeground(new Color(0, 102, 204));
-        statusLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        add(statusLabel, BorderLayout.NORTH);
+        statusLabel.setForeground(Color.DARK_GRAY); // Consistent color
+        statusPanel.add(statusLabel);
+        mainPanel.add(statusPanel, BorderLayout.NORTH);
 
         // Input panel
         JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
+        formPanel.setBorder(BorderFactory.createEmptyBorder(10, 40, 10, 40)); // Consistent padding
+        formPanel.setOpaque(false); // Make form panel transparent
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 8, 8, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
 
         int y = 0;
 
         // Full Name
         gbc.gridx = 0; gbc.gridy = y;
-        formPanel.add(new JLabel("Full Name:"), gbc);
+        JLabel nameLabel = new JLabel("Full Name:");
+        nameLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        formPanel.add(nameLabel, gbc);
         gbc.gridx = 1; gbc.gridy = y++;
+        gbc.weightx = 1.0;
         nameField = new JTextField();
+        nameField.setPreferredSize(new Dimension(150, 30));
+        nameField.setBackground(Color.WHITE);
         formPanel.add(nameField, gbc);
 
         // Username
         gbc.gridx = 0; gbc.gridy = y;
-        formPanel.add(new JLabel("Username:"), gbc);
+        JLabel usernameLabel = new JLabel("Username:");
+        usernameLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        formPanel.add(usernameLabel, gbc);
         gbc.gridx = 1; gbc.gridy = y++;
         usernameField = new JTextField();
+        usernameField.setPreferredSize(new Dimension(150, 30));
+        usernameField.setBackground(Color.WHITE);
         formPanel.add(usernameField, gbc);
 
         // Email
         gbc.gridx = 0; gbc.gridy = y;
-        formPanel.add(new JLabel("Email:"), gbc);
+        JLabel emailLabel = new JLabel("Email:");
+        emailLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        formPanel.add(emailLabel, gbc);
         gbc.gridx = 1; gbc.gridy = y++;
         emailField = new JTextField();
+        emailField.setPreferredSize(new Dimension(150, 30));
+        emailField.setBackground(Color.WHITE);
         formPanel.add(emailField, gbc);
 
         // Password
         gbc.gridx = 0; gbc.gridy = y;
-        formPanel.add(new JLabel("Password:"), gbc);
+        JLabel passwordLabel = new JLabel("Password:");
+        passwordLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        formPanel.add(passwordLabel, gbc);
         gbc.gridx = 1; gbc.gridy = y++;
         passwordField = new JPasswordField();
+        passwordField.setPreferredSize(new Dimension(150, 30));
+        passwordField.setBackground(Color.WHITE);
         formPanel.add(passwordField, gbc);
 
         // Security Question
         gbc.gridx = 0; gbc.gridy = y;
-        formPanel.add(new JLabel("Security Question:"), gbc);
+        JLabel questionLabel = new JLabel("Security Question:");
+        questionLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        formPanel.add(questionLabel, gbc);
         gbc.gridx = 1; gbc.gridy = y++;
         securityQuestionBox = new JComboBox<>(new String[] {
                 "What is your pet's name?",
                 "What is your mother's maiden name?",
-                "What is your favourite book?",
+                "What is your favorite book?",
                 "What was the name of your first school?"
         });
+        securityQuestionBox.setPreferredSize(new Dimension(150, 30));
+        securityQuestionBox.setBackground(Color.WHITE);
         formPanel.add(securityQuestionBox, gbc);
 
         // Answer
         gbc.gridx = 0; gbc.gridy = y;
-        formPanel.add(new JLabel("Answer:"), gbc);
+        JLabel answerLabel = new JLabel("Answer:");
+        answerLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        formPanel.add(answerLabel, gbc);
         gbc.gridx = 1; gbc.gridy = y++;
         answerField = new JTextField();
+        answerField.setPreferredSize(new Dimension(150, 30));
+        answerField.setBackground(Color.WHITE);
         formPanel.add(answerField, gbc);
 
-        add(formPanel, BorderLayout.CENTER);
+        mainPanel.add(formPanel, BorderLayout.CENTER);
 
         // Sign Up Button
         JPanel bottomPanel = new JPanel();
+        bottomPanel.setOpaque(false);
         signUpButton = new JButton("Sign Up");
         signUpButton.setPreferredSize(new Dimension(120, 35));
         signUpButton.addActionListener(this);
+        signUpButton.setBackground(new Color(70, 130, 180));
+        signUpButton.setForeground(Color.WHITE);
+        signUpButton.setFocusPainted(false);
+        signUpButton.setBorder(new RoundedBorder(10));
         bottomPanel.add(signUpButton);
-        add(bottomPanel, BorderLayout.SOUTH);
+        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
 
         setVisible(true);
     }

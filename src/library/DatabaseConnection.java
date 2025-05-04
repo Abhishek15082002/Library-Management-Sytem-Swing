@@ -4,8 +4,8 @@ import java.io.*;
 public class DatabaseConnection {
     public static final String DRIVER_CLASS = "com.mysql.cj.jdbc.Driver"; 
     private static final String DB_URL = "jdbc:mysql://localhost/library_db"; // Replace 'library_db' with your DB name
-    private static final String DB_USER = "root"; 
-    private static final String DB_PASSWORD = "root";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "Abhishek@123";
 
     private static Connection connection = null;
     private DatabaseConnection() {}

@@ -12,25 +12,42 @@ import java.util.List;
 
 public class LibrarianDashboard extends JFrame implements ActionListener {
 
+    private static final Color PRIMARY_COLOR = new Color(52, 152, 219);   // Blue
+    private static final Color SECONDARY_COLOR = new Color(236, 240, 241); // Light Gray
+    private static final Color ACCENT_COLOR = new Color(255, 107, 107);
+    private static final Font MAIN_FONT = new Font("Segoe UI", Font.PLAIN, 14);
+    private static final Font TITLE_FONT = new Font("Segoe UI", Font.BOLD, 20);
+    private static final Font SUBTITLE_FONT = new Font("Segoe UI", Font.BOLD, 16);
+    private static final int BORDER_RADIUS = 10;
+
     private JButton logoutButton;
 
     public LibrarianDashboard() {
         setTitle("Librarian Dashboard - Tabbed Version");
-        setSize(1000, 700);
+        setSize(1150, 800);
+        setMinimumSize(new Dimension(900, 650));
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
         JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(PRIMARY_COLOR);
         topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
+
         JLabel titleLabel = new JLabel("Librarian Dashboard");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        titleLabel.setFont(TITLE_FONT);
+        titleLabel.setForeground(Color.WHITE);
         topPanel.add(titleLabel, BorderLayout.WEST);
 
         logoutButton = new JButton("Logout");
         logoutButton.setPreferredSize(new Dimension(120, 35));
-        logoutButton.setFont(new Font("Arial", Font.BOLD, 14));
+        logoutButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
+
+        logoutButton.setBackground(ACCENT_COLOR);
+        logoutButton.setForeground(Color.WHITE);
+        logoutButton.setFocusPainted(false);
+        logoutButton.setBorder(new RoundedBorder(BORDER_RADIUS));
         logoutButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -43,6 +60,8 @@ public class LibrarianDashboard extends JFrame implements ActionListener {
 
         // Main TabbedPane
         JTabbedPane mainTabbedPane = new JTabbedPane();
+        mainTabbedPane.setFont(MAIN_FONT);
+        mainTabbedPane.setBackground(SECONDARY_COLOR);
 
         // Add all tabs
         mainTabbedPane.addTab("Manage Books", createManageBooksTab());
@@ -56,45 +75,80 @@ public class LibrarianDashboard extends JFrame implements ActionListener {
         setVisible(true);
     }
 
+    private static class RoundedBorder extends javax.swing.border.AbstractBorder {
+        private int radius;
+        RoundedBorder(int radius) { this.radius = radius; }
+        @Override
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            Graphics2D g2d = (Graphics2D) g.create();
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.setColor(c.getForeground());
+            g2d.drawRoundRect(x, y, width - 1, height - 1, radius, radius);
+            g2d.dispose();
+        }
+        @Override
+        public Insets getBorderInsets(Component c) {
+            return new Insets(radius/2, radius/2, radius/2, radius/2);
+        }
+        @Override
+        public Insets getBorderInsets(Component c, Insets insets) {
+            insets.top = insets.left = insets.bottom = insets.right = radius/2;
+            return insets;
+        }
+    }
+
     // Tab 1: Manage Books
     private JPanel createManageBooksTab() {
         JTabbedPane manageBooksTabs = new JTabbedPane();
+        manageBooksTabs.setFont(MAIN_FONT);
+        manageBooksTabs.setBackground(SECONDARY_COLOR);
+        manageBooksTabs.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
 
         // Sub-tab: Add Book
         JPanel addBookPanel = new JPanel(new GridBagLayout());
-        addBookPanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
+        addBookPanel.setBackground(SECONDARY_COLOR);
+        addBookPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
 
+        JLabel titleLabel = new JLabel("Title:");
+        titleLabel.setFont(MAIN_FONT);
         JTextField titleField = new JTextField(20);
+        titleField.setFont(MAIN_FONT);
+        JLabel authorLabel = new JLabel("Author:");
+        authorLabel.setFont(MAIN_FONT);
         JTextField authorField = new JTextField(20);
-        JTextField categoryField = new JTextField(20); // Uncomment if category is needed
+        authorField.setFont(MAIN_FONT);
+        JLabel copiesLabel = new JLabel("Copies:");
+        copiesLabel.setFont(MAIN_FONT);
         JTextField copiesField = new JTextField(20);
+        copiesField.setFont(MAIN_FONT);
+        JTextField categoryField = new JTextField(20);
         JButton addButton = new JButton("Add Book");
+        addButton.setFont(MAIN_FONT);
+        addButton.setBackground(PRIMARY_COLOR);
+        addButton.setForeground(Color.WHITE);
+        addButton.setFocusPainted(false);
+        addButton.setBorder(new RoundedBorder(BORDER_RADIUS));
 
         gbc.gridx = 0; gbc.gridy = 0;
-        addBookPanel.add(new JLabel("Title:"), gbc);
+        addBookPanel.add(titleLabel, gbc);
         gbc.gridx = 1;
         addBookPanel.add(titleField, gbc);
 
         gbc.gridx = 0; gbc.gridy = 1;
-        addBookPanel.add(new JLabel("Author:"), gbc);
+        addBookPanel.add(authorLabel, gbc);
         gbc.gridx = 1;
         addBookPanel.add(authorField, gbc);
 
         gbc.gridx = 0; gbc.gridy = 2;
-        addBookPanel.add(new JLabel("Category:"), gbc);
-        gbc.gridx = 1;
-        addBookPanel.add(categoryField, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 3;
-        addBookPanel.add(new JLabel("Copies:"), gbc);
+        addBookPanel.add(copiesLabel, gbc);
         gbc.gridx = 1;
         addBookPanel.add(copiesField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 4;
+        gbc.gridx = 0; gbc.gridy = 3;
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
         addBookPanel.add(addButton, gbc);
@@ -110,6 +164,7 @@ public class LibrarianDashboard extends JFrame implements ActionListener {
 
 
         viewBooksPanel = new JPanel(new BorderLayout(10, 10));
+        viewBooksPanel.setBackground(SECONDARY_COLOR);
         viewBooksPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
 
@@ -134,6 +189,8 @@ public class LibrarianDashboard extends JFrame implements ActionListener {
         }
 
         booksTable = new JTable(booksTableModel);
+        booksTable.setFont(MAIN_FONT);
+        booksTable.getTableHeader().setFont(MAIN_FONT);
         booksTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         booksTable.setAutoCreateRowSorter(true);
 
@@ -143,12 +200,18 @@ public class LibrarianDashboard extends JFrame implements ActionListener {
         booksTable.setFillsViewportHeight(true);
 
         JScrollPane scrollPane = new JScrollPane(booksTable);
+        scrollPane.getViewport().setBackground(Color.WHITE);
         viewBooksPanel.add(scrollPane, BorderLayout.CENTER);
 
         // Create action panel
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 5));
 
         refreshButton = new JButton("Refresh");
+        refreshButton.setFont(MAIN_FONT);
+        refreshButton.setBackground(PRIMARY_COLOR);
+        refreshButton.setForeground(Color.WHITE);
+        refreshButton.setFocusPainted(false);
+        refreshButton.setBorder(new RoundedBorder(BORDER_RADIUS));
 
 
         refreshButton.setToolTipText("Refresh all data");
@@ -174,6 +237,8 @@ public class LibrarianDashboard extends JFrame implements ActionListener {
 
         // Sub-tab: Delete Book
         JPanel deleteBookPanel = new JPanel(new GridBagLayout());
+        deleteBookPanel.setBackground(SECONDARY_COLOR);
+        deleteBookPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         GridBagConstraints gbc2 = new GridBagConstraints();
         gbc2.insets = new Insets(10, 10, 10, 10);
         gbc2.fill = GridBagConstraints.HORIZONTAL;
@@ -193,6 +258,11 @@ public class LibrarianDashboard extends JFrame implements ActionListener {
         deleteBookPanel.add(deleteButton, gbc2);
 
         // Add action listener to delete book
+        deleteButton.setFont(MAIN_FONT);
+        deleteButton.setBackground(ACCENT_COLOR);
+        deleteButton.setForeground(Color.WHITE);
+        deleteButton.setFocusPainted(false);
+        deleteButton.setBorder(new RoundedBorder(BORDER_RADIUS));
         deleteButton.addActionListener(e -> deleteBook(bookIdField.getText()));
 
         // Add sub-tabs
@@ -244,10 +314,21 @@ public class LibrarianDashboard extends JFrame implements ActionListener {
         gbc.weightx = 1.0;
 
         JTextField studentIdField = new JTextField(20);
+        studentIdField.setFont(MAIN_FONT);
+        JLabel bookIdLabel = new JLabel("Book ID:");
+        bookIdLabel.setFont(MAIN_FONT);
         JTextField bookIdField = new JTextField(20);
+        bookIdField.setFont(MAIN_FONT);
         JLabel issueDateLabel = new JLabel("Issue Date: " + LocalDate.now());
+        issueDateLabel.setFont(MAIN_FONT);
         JLabel dueDateLabel = new JLabel("Due Date: " + LocalDate.now().plusDays(14));
+        dueDateLabel.setFont(MAIN_FONT);
         JButton issueButton = new JButton("Issue Book");
+        issueButton.setFont(MAIN_FONT);
+        issueButton.setBackground(PRIMARY_COLOR);
+        issueButton.setForeground(Color.WHITE);
+        issueButton.setFocusPainted(false);
+        issueButton.setBorder(new RoundedBorder(BORDER_RADIUS));
 
         gbc.gridx = 0; gbc.gridy = 0;
         issuePanel.add(new JLabel("Student ID:"), gbc);
@@ -304,7 +385,8 @@ public class LibrarianDashboard extends JFrame implements ActionListener {
         }
 
         JPanel viewIssuedPanel = new JPanel(new BorderLayout());
-        viewIssuedPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        viewIssuedPanel.setBackground(SECONDARY_COLOR);
+        viewIssuedPanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
         DefaultTableModel issuedBooksTableModel = new DefaultTableModel(new String[]{ "Book ID", "Student ID","Title","Issue Date", "Due Date","Return Date","Status"}, 0) {
 
             @Override
@@ -318,6 +400,11 @@ public class LibrarianDashboard extends JFrame implements ActionListener {
         }
         // refresh button
         JButton refreshButton = new JButton("Refresh");
+        refreshButton.setFont(MAIN_FONT);
+        refreshButton.setBackground(PRIMARY_COLOR);
+        refreshButton.setForeground(Color.WHITE);
+        refreshButton.setFocusPainted(false);
+        refreshButton.setBorder(new RoundedBorder(BORDER_RADIUS));
         refreshButton.addActionListener(e -> {
             try {
                 List<Object[]> issued_Books = LibrarianService.getAllIssuedBooks(null);
@@ -335,14 +422,18 @@ public class LibrarianDashboard extends JFrame implements ActionListener {
         viewIssuedPanel.add(refreshButton, BorderLayout.NORTH);
 
         JTable issuedBooksTable = new JTable(issuedBooksTableModel);
-
-        viewIssuedPanel.add(new JScrollPane(issuedBooksTable), BorderLayout.CENTER);
+        issuedBooksTable.setFont(MAIN_FONT);
+        issuedBooksTable.getTableHeader().setFont(MAIN_FONT);
+        JScrollPane issuedBooksScrollPane = new JScrollPane(issuedBooksTable);
+        issuedBooksScrollPane.getViewport().setBackground(Color.WHITE);
+        viewIssuedPanel.add(issuedBooksScrollPane, BorderLayout.CENTER);
         return viewIssuedPanel;
     }
 
     // Tab 4: Return Books
     private JPanel createReturnBooksTab() {
         JPanel returnPanel = new JPanel(new GridBagLayout());
+        returnPanel.setBackground(SECONDARY_COLOR);
         returnPanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
@@ -350,10 +441,25 @@ public class LibrarianDashboard extends JFrame implements ActionListener {
         gbc.weightx = 1.0;
 
         JTextField studentIdField = new JTextField(20);
+        studentIdField.setFont(MAIN_FONT);
+        JLabel bookIdLabel = new JLabel("Book ID:");
+        bookIdLabel.setFont(MAIN_FONT);
         JTextField bookIdField = new JTextField(20);
+        bookIdField.setFont(MAIN_FONT);
         JLabel fineLabel = new JLabel("Fine: Rs. 0");
+        fineLabel.setFont(MAIN_FONT);
         JButton calculateFineButton = new JButton("Calculate Fine");
+        calculateFineButton.setFont(MAIN_FONT);
+        calculateFineButton.setBackground(PRIMARY_COLOR);
+        calculateFineButton.setForeground(Color.WHITE);
+        calculateFineButton.setFocusPainted(false);
+        calculateFineButton.setBorder(new RoundedBorder(BORDER_RADIUS));
         JButton returnButton = new JButton("Return Book");
+        returnButton.setFont(MAIN_FONT);
+        returnButton.setBackground(PRIMARY_COLOR);
+        returnButton.setForeground(Color.WHITE);
+        returnButton.setFocusPainted(false);
+        returnButton.setBorder(new RoundedBorder(BORDER_RADIUS));
 
         gbc.gridx = 0; gbc.gridy = 0;
         returnPanel.add(new JLabel("Student ID:"), gbc);
@@ -410,7 +516,11 @@ public class LibrarianDashboard extends JFrame implements ActionListener {
     // Tab 5: Student Records
     private JPanel createStudentRecordsTab() {
         JPanel studentRecordsPanel = new JPanel(new BorderLayout());
+        studentRecordsPanel.setBackground(SECONDARY_COLOR);
+        studentRecordsPanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
         JTable studentsTable = new JTable(new DefaultTableModel(new String[]{"Student ID", "Name", "Email"}, 0));
+        studentsTable.setFont(MAIN_FONT);
+        studentsTable.getTableHeader().setFont(MAIN_FONT);
         try{
             List<Object[]> students = LibrarianService.getAllStudents(null);
             DefaultTableModel studentsTableModel = (DefaultTableModel) studentsTable.getModel();
@@ -444,14 +554,20 @@ public class LibrarianDashboard extends JFrame implements ActionListener {
             }
         });
 
-        studentRecordsPanel.add(new JScrollPane(studentsTable), BorderLayout.CENTER);
+        JScrollPane studentsScrollPane = new JScrollPane(studentsTable);
+        studentsScrollPane.getViewport().setBackground(Color.WHITE);
+        studentRecordsPanel.add(studentsScrollPane, BorderLayout.CENTER);
         return studentRecordsPanel;
     }
 
     // Tab 6: Overdue Notifications
     private JPanel createOverdueNotificationsTab() {
         JPanel overduePanel = new JPanel(new BorderLayout());
+        overduePanel.setBackground(SECONDARY_COLOR);
+        overduePanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
         JTable overdueTable = new JTable(new DefaultTableModel(new String[]{"Book ID", "Title","Student ID", "Due Date"}, 0));
+        overdueTable.setFont(MAIN_FONT);
+        overdueTable.getTableHeader().setFont(MAIN_FONT);
 
         try {
             List<Object[]> overdueBooks = LibrarianService.getOverdueBooks();
@@ -467,9 +583,15 @@ public class LibrarianDashboard extends JFrame implements ActionListener {
 
         }
         JButton sendNotificationButton = new JButton("Send Notification");
+        sendNotificationButton.setFont(MAIN_FONT);
+        sendNotificationButton.setBackground(ACCENT_COLOR);
+        sendNotificationButton.setForeground(Color.WHITE);
+        sendNotificationButton.setFocusPainted(false);
+        sendNotificationButton.setBorder(new RoundedBorder(BORDER_RADIUS));
 
         overduePanel.add(new JScrollPane(overdueTable), BorderLayout.CENTER);
         overduePanel.add(sendNotificationButton, BorderLayout.SOUTH);
+
 
         // Add action listener to send overdue notifications
 

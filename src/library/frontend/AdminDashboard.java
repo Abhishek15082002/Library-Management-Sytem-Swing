@@ -90,8 +90,29 @@ public class AdminDashboard extends JFrame implements ActionListener {
     private JLabel monthlyTotalLabel; // To display the total
 
     // --- Logout Components ---
-    private JPanel logoutPanel;
     private JButton logoutButton;
+
+    private static final Color PRIMARY_COLOR = new Color(52, 152, 219);   // Blue
+    private static final Color SECONDARY_COLOR = new Color(236, 240, 241); // Light Gray
+    private static final Color ACCENT_COLOR = new Color(255, 107, 107);    // Red
+    private static final Font MAIN_FONT = new Font("Segoe UI", Font.PLAIN, 14);
+    private static final Font TITLE_FONT = new Font("Segoe UI", Font.BOLD, 24);
+    private static final Font SUBTITLE_FONT = new Font("Segoe UI", Font.BOLD, 16);
+    private static final int BORDER_RADIUS = 8;
+
+    private static class RoundedBorder implements javax.swing.border.Border {
+        private int radius;
+        RoundedBorder(int radius) { this.radius = radius; }
+        public Insets getBorderInsets(Component c) { return new Insets(this.radius, this.radius, this.radius, this.radius); }
+        public boolean isBorderOpaque() { return false; }
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            Graphics2D g2d = (Graphics2D) g.create();
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.setColor(PRIMARY_COLOR);
+            g2d.drawRoundRect(x, y, width - 1, height - 1, radius, radius);
+            g2d.dispose();
+        }
+    }
 
 
     public AdminDashboard() {
@@ -116,20 +137,41 @@ public class AdminDashboard extends JFrame implements ActionListener {
         });
 
         mainTabs = new JTabbedPane();
-
+        mainTabs.setFont(MAIN_FONT);
+        mainTabs.setBackground(SECONDARY_COLOR);
         // Create and add tabs
         createUserManagementTab();
         createLibrarianManagementTab();
         createFineManagementTab();
         createReportsTab(); // Create the actual reports tab now
-        createLogoutTab();
 
         mainTabs.addTab("User Accounts", userManagementPanel);
         mainTabs.addTab("Manage Librarians", librarianManagementPanel);
         mainTabs.addTab("Fine Management", fineManagementPanel);
         mainTabs.addTab("View Reports", reportsPanel); // Add reports tab
-        mainTabs.addTab("Logout", logoutPanel);
 
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(PRIMARY_COLOR);
+        topPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        JLabel titleLabel = new JLabel("Admin Dashboard - " + session.getUsername());
+        titleLabel.setFont(TITLE_FONT);
+        titleLabel.setForeground(Color.WHITE);
+        topPanel.add(titleLabel, BorderLayout.WEST);
+
+        logoutButton = new JButton("Logout");
+        logoutButton.setPreferredSize(new Dimension(140, 40));
+        logoutButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        logoutButton.addActionListener(this);
+
+        logoutButton.setBackground(ACCENT_COLOR);
+        logoutButton.setForeground(Color.WHITE);
+        logoutButton.setFocusPainted(false);
+        logoutButton.setBorder(new RoundedBorder(BORDER_RADIUS));
+
+        topPanel.add(logoutButton, BorderLayout.EAST);
+
+        add(topPanel, BorderLayout.NORTH);
         add(mainTabs, BorderLayout.CENTER);
 
         // Load initial data
@@ -144,28 +186,54 @@ public class AdminDashboard extends JFrame implements ActionListener {
     // --- Tab Creation Methods ---
 
     private void createUserManagementTab() {
-        userManagementPanel = new JPanel(new BorderLayout(10, 10));
-        userManagementPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        userManagementPanel = new JPanel(new BorderLayout(15, 15));
+        userManagementPanel.setBackground(SECONDARY_COLOR);
+        userManagementPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchPanel.setBackground(SECONDARY_COLOR);
         userSearchField = new JTextField(25); userSearchButton = new JButton("Search Users");
+        userSearchField.setFont(MAIN_FONT);
+        userSearchButton.setFont(MAIN_FONT);
+
+        userSearchButton.setBackground(PRIMARY_COLOR);
+        userSearchButton.setForeground(Color.WHITE);
+        userSearchButton.setFocusPainted(false);
+        userSearchButton.setBorder(new RoundedBorder(BORDER_RADIUS));
+        userSearchButton.addActionListener(this);
         userSearchButton.addActionListener(this); userSearchField.addActionListener(e -> userSearchButton.doClick());
         searchPanel.add(new JLabel("Search Username/Email:")); searchPanel.add(userSearchField); searchPanel.add(userSearchButton);
         userManagementPanel.add(searchPanel, BorderLayout.NORTH);
         String[] userColumns = {"Username", "Role", "Status", "Email"};
         usersTableModel = new DefaultTableModel(userColumns, 0) { @Override public boolean isCellEditable(int r, int c) { return false; }};
-        usersTable = new JTable(usersTableModel); usersTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); usersTable.setAutoCreateRowSorter(true);
-        JScrollPane userScrollPane = new JScrollPane(usersTable); userManagementPanel.add(userScrollPane, BorderLayout.CENTER);
+        usersTable = new JTable(usersTableModel); usersTable.setFont(MAIN_FONT);
+        usersTable.getTableHeader().setFont(MAIN_FONT); usersTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); usersTable.setAutoCreateRowSorter(true);
+        JScrollPane userScrollPane = new JScrollPane(usersTable);
+        userScrollPane.getViewport().setBackground(Color.WHITE); userManagementPanel.add(userScrollPane, BorderLayout.CENTER);
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
-        activateUserButton = new JButton("Activate Selected"); deactivateUserButton = new JButton("Deactivate Selected");
+        buttonPanel.setBackground(SECONDARY_COLOR);
+        activateUserButton = new JButton("Activate Selected"); activateUserButton.setFont(MAIN_FONT);
+        deactivateUserButton = new JButton("Deactivate Selected");  deactivateUserButton.setFont(MAIN_FONT);
         activateUserButton.setToolTipText("Set the selected user's status to Active."); deactivateUserButton.setToolTipText("Set the selected user's status to Inactive.");
         activateUserButton.addActionListener(this); deactivateUserButton.addActionListener(this);
+        activateUserButton.setBackground(new Color(46, 204, 113)); // Green
+        activateUserButton.setForeground(Color.WHITE);
+        activateUserButton.setFocusPainted(false);
+        activateUserButton.setBorder(new RoundedBorder(BORDER_RADIUS));
+        deactivateUserButton.setBackground(ACCENT_COLOR);
+        deactivateUserButton.setForeground(Color.WHITE);
+        deactivateUserButton.setFocusPainted(false);
+        deactivateUserButton.setBorder(new RoundedBorder(BORDER_RADIUS));
         buttonPanel.add(activateUserButton); buttonPanel.add(deactivateUserButton);
         userManagementPanel.add(buttonPanel, BorderLayout.SOUTH);
     }
 
     private void createLibrarianManagementTab() {
         librarianManagementPanel = new JPanel(new BorderLayout());
+        librarianManagementPanel.setBackground(SECONDARY_COLOR);
+        librarianManagementPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         addLibrarianPanel = new JPanel(new GridBagLayout()); addLibrarianPanel.setBorder(BorderFactory.createTitledBorder("Add New Librarian"));
+        addLibrarianPanel.setBackground(SECONDARY_COLOR);
+        addLibrarianPanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
         GridBagConstraints gbc = new GridBagConstraints(); gbc.insets = new Insets(5, 10, 5, 10); gbc.anchor = GridBagConstraints.WEST; gbc.fill = GridBagConstraints.HORIZONTAL;
         int gridY = 0;
         gbc.gridx = 0; gbc.gridy = gridY; gbc.weightx = 0.1; addLibrarianPanel.add(new JLabel("Username:"), gbc);
@@ -178,32 +246,61 @@ public class AdminDashboard extends JFrame implements ActionListener {
         gbc.gridx = 1; gbc.gridy = gridY++; gbc.weightx = 0.9; libEmailField = new JTextField(15); addLibrarianPanel.add(libEmailField, gbc);
         gbc.gridx = 0; gbc.gridy = gridY++; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE; gbc.anchor = GridBagConstraints.CENTER; gbc.weightx = 0.0;
         addLibrarianButton = new JButton("Add Librarian"); addLibrarianButton.addActionListener(this); addLibrarianPanel.add(addLibrarianButton, gbc);
+        addLibrarianButton.setFont(MAIN_FONT);
+        addLibrarianButton.setBackground(new Color(46, 204, 113)); // Green
+        addLibrarianButton.setForeground(Color.WHITE);
+        addLibrarianButton.setFocusPainted(false);
+        addLibrarianButton.setBorder(new RoundedBorder(BORDER_RADIUS));
         gbc.gridy = gridY; gbc.weighty = 1.0; addLibrarianPanel.add(new JLabel(), gbc);
-        viewLibrariansPanel = new JPanel(new BorderLayout(10, 10)); viewLibrariansPanel.setBorder(BorderFactory.createTitledBorder("Current Librarians"));
+        viewLibrariansPanel = new JPanel(new BorderLayout(10, 10)); viewLibrariansPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(PRIMARY_COLOR), "Current Librarians", 0, 0, SUBTITLE_FONT, PRIMARY_COLOR));
+        viewLibrariansPanel.setBackground(SECONDARY_COLOR);
         String[] libColumns = {"Librarian ID", "Name", "Username", "Email"};
         librariansTableModel = new DefaultTableModel(libColumns, 0) { @Override public boolean isCellEditable(int r, int c) { return false; }};
         librariansTable = new JTable(librariansTableModel); librariansTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); librariansTable.setAutoCreateRowSorter(true);
+        librariansTable.setFont(MAIN_FONT);
+        librariansTable.getTableHeader().setFont(MAIN_FONT);
         JScrollPane librarianScrollPane = new JScrollPane(librariansTable); viewLibrariansPanel.add(librarianScrollPane, BorderLayout.CENTER);
+        librarianScrollPane.getViewport().setBackground(Color.WHITE);
         JPanel deleteButtonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER)); deleteLibrarianButton = new JButton("Delete Selected Librarian"); deleteLibrarianButton.addActionListener(this);
+        deleteLibrarianButton.setFont(MAIN_FONT);
+        deleteLibrarianButton.setBackground(ACCENT_COLOR);
+        deleteLibrarianButton.setForeground(Color.WHITE);
+        deleteLibrarianButton.setFocusPainted(false);
+        deleteLibrarianButton.setBorder(new RoundedBorder(BORDER_RADIUS));
         deleteButtonPanel.add(deleteLibrarianButton); viewLibrariansPanel.add(deleteButtonPanel, BorderLayout.SOUTH);
+        deleteButtonPanel.setBackground(SECONDARY_COLOR);
         librarianSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, addLibrarianPanel, viewLibrariansPanel);
-        librarianSplitPane.setDividerLocation(380); librarianSplitPane.setResizeWeight(0.35);
+        librarianSplitPane.setDividerLocation(4000); librarianSplitPane.setResizeWeight(0.4);
         librarianManagementPanel.add(librarianSplitPane, BorderLayout.CENTER);
     }
 
     private void createFineManagementTab() {
         fineManagementPanel = new JPanel(new BorderLayout(10, 10)); fineManagementPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        fineManagementPanel.setBackground(SECONDARY_COLOR);
+        fineManagementPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT)); fineSearchStudentIdField = new JTextField(15);
         fineSearchButton = new JButton("Filter by Student ID"); fineSearchButton.setToolTipText("Enter Student ID (e.g., S001) or leave blank for all.");
+        fineSearchButton.setFont(MAIN_FONT);
+        fineSearchButton.setBackground(PRIMARY_COLOR);
+        fineSearchButton.setForeground(Color.WHITE);
+        fineSearchButton.setFocusPainted(false);
+        fineSearchButton.setBorder(new RoundedBorder(BORDER_RADIUS));
         fineSearchButton.addActionListener(this); fineSearchStudentIdField.addActionListener(e -> fineSearchButton.doClick());
         searchPanel.add(new JLabel("Filter by Student ID:")); searchPanel.add(fineSearchStudentIdField); searchPanel.add(fineSearchButton);
         fineManagementPanel.add(searchPanel, BorderLayout.NORTH);
         String[] fineColumns = {"Fine ID", "Student ID", "Student Name", "Issue ID", "Book Title", "Amount", "Fine Date"};
         finesTableModel = new DefaultTableModel(fineColumns, 0) { @Override public boolean isCellEditable(int r, int c) { return false; }};
         finesTable = new JTable(finesTableModel); finesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); finesTable.setAutoCreateRowSorter(true);
+        finesTable.setFont(MAIN_FONT); finesTable.getTableHeader().setFont(MAIN_FONT);
         finesTable.getColumnModel().getColumn(0).setPreferredWidth(60); finesTable.getColumnModel().getColumn(1).setPreferredWidth(80); finesTable.getColumnModel().getColumn(2).setPreferredWidth(150); finesTable.getColumnModel().getColumn(3).setPreferredWidth(60); finesTable.getColumnModel().getColumn(4).setPreferredWidth(250); finesTable.getColumnModel().getColumn(5).setPreferredWidth(80); finesTable.getColumnModel().getColumn(6).setPreferredWidth(100);
         JScrollPane fineScrollPane = new JScrollPane(finesTable); fineManagementPanel.add(fineScrollPane, BorderLayout.CENTER);
+        fineScrollPane.getViewport().setBackground(Color.WHITE);
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER)); waiveFineButton = new JButton("Waive Selected Fine");
+        waiveFineButton.setFont(MAIN_FONT);
+        waiveFineButton.setBackground(PRIMARY_COLOR);
+        waiveFineButton.setForeground(Color.WHITE);
+        waiveFineButton.setFocusPainted(false);
+        waiveFineButton.setBorder(new RoundedBorder(BORDER_RADIUS));
         waiveFineButton.setToolTipText("Mark the selected unpaid fine as paid/waived."); waiveFineButton.addActionListener(this);
         buttonPanel.add(waiveFineButton); fineManagementPanel.add(buttonPanel, BorderLayout.SOUTH);
     }
@@ -211,7 +308,11 @@ public class AdminDashboard extends JFrame implements ActionListener {
     // --- Reports Tab Implementation ---
     private void createReportsTab() {
         reportsPanel = new JPanel(new BorderLayout());
+        reportsPanel.setBackground(SECONDARY_COLOR);
+        reportsPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         reportsSubTabs = new JTabbedPane();
+        reportsSubTabs.setFont(MAIN_FONT);
+        reportsSubTabs.setBackground(SECONDARY_COLOR);
 
         // Create and add sub-tabs
         createAvailableBooksReportTab();
@@ -227,6 +328,7 @@ public class AdminDashboard extends JFrame implements ActionListener {
 
     private void createAvailableBooksReportTab() {
         availableBooksReportPanel = new JPanel(new BorderLayout(10, 10));
+        availableBooksReportPanel.setBackground(SECONDARY_COLOR);
         availableBooksReportPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         String[] columns = {"Book ID", "Title", "Author", "Category", "Available Copies"};
         availableBooksReportModel = new DefaultTableModel(columns, 0) { @Override public boolean isCellEditable(int r, int c) { return false; }};
@@ -235,6 +337,11 @@ public class AdminDashboard extends JFrame implements ActionListener {
         availableBooksReportPanel.add(new JScrollPane(availableBooksReportTable), BorderLayout.CENTER);
 
         refreshAvailButton = new JButton("Refresh");
+        refreshAvailButton.setFont(MAIN_FONT);
+        refreshAvailButton.setBackground(PRIMARY_COLOR);
+        refreshAvailButton.setForeground(Color.WHITE);
+        refreshAvailButton.setFocusPainted(false);
+        refreshAvailButton.setBorder(new RoundedBorder(BORDER_RADIUS));
         refreshAvailButton.addActionListener(e -> loadAvailableBooksReport());
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         bottomPanel.add(refreshAvailButton);
@@ -243,6 +350,7 @@ public class AdminDashboard extends JFrame implements ActionListener {
 
     private void createBorrowedBooksReportTab() {
         borrowedBooksReportPanel = new JPanel(new BorderLayout(10, 10));
+        borrowedBooksReportPanel.setBackground(SECONDARY_COLOR);
         borrowedBooksReportPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         String[] columns = {"Issue ID", "Book ID", "Book Title", "Student ID", "Student Name", "Issue Date", "Due Date", "Status"};
         borrowedBooksReportModel = new DefaultTableModel(columns, 0) { @Override public boolean isCellEditable(int r, int c) { return false; }};
@@ -251,6 +359,11 @@ public class AdminDashboard extends JFrame implements ActionListener {
         borrowedBooksReportPanel.add(new JScrollPane(borrowedBooksReportTable), BorderLayout.CENTER);
 
         refreshBorrowedButton = new JButton("Refresh");
+        refreshAvailButton.setFont(MAIN_FONT);
+        refreshAvailButton.setBackground(PRIMARY_COLOR);
+        refreshAvailButton.setForeground(Color.WHITE);
+        refreshAvailButton.setFocusPainted(false);
+        refreshAvailButton.setBorder(new RoundedBorder(BORDER_RADIUS));
         refreshBorrowedButton.addActionListener(e -> loadBorrowedBooksReport());
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         bottomPanel.add(refreshBorrowedButton);
@@ -258,8 +371,12 @@ public class AdminDashboard extends JFrame implements ActionListener {
     }
 
     private void createFineReportsTabContainer() {
-        fineReportsPanel = new JPanel(new BorderLayout()); // Panel to hold the sub-tabs
-        fineReportsSubTabs = new JTabbedPane(); // Sub-tabs for fine reports
+        fineReportsPanel = new JPanel(new BorderLayout());
+        fineReportsPanel.setBackground(SECONDARY_COLOR);
+        fineReportsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));// Panel to hold the sub-tabs
+        fineReportsSubTabs = new JTabbedPane();
+        fineReportsSubTabs.setFont(MAIN_FONT);
+        fineReportsSubTabs.setBackground(SECONDARY_COLOR);// Sub-tabs for fine reports
 
         createIndividualFineReportTab(); // Create the individual fine report tab panel
         createMonthlyFineReportTab(); // Create the monthly fine report tab panel
@@ -272,12 +389,18 @@ public class AdminDashboard extends JFrame implements ActionListener {
 
     private void createIndividualFineReportTab() {
         individualFineReportPanel = new JPanel(new BorderLayout(10, 10));
+        individualFineReportPanel.setBackground(SECONDARY_COLOR);
         individualFineReportPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         // Search Panel
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         studentIdFineReportField = new JTextField(15);
         searchStudentFineReportButton = new JButton("Get Student Fine Report");
         searchStudentFineReportButton.addActionListener(this);
+        searchStudentFineReportButton.setFont(MAIN_FONT);
+        searchStudentFineReportButton.setBackground(PRIMARY_COLOR);
+        searchStudentFineReportButton.setForeground(Color.WHITE);
+        searchStudentFineReportButton.setFocusPainted(false);
+        searchStudentFineReportButton.setBorder(new RoundedBorder(BORDER_RADIUS));
         studentIdFineReportField.addActionListener(e -> searchStudentFineReportButton.doClick());
         searchPanel.add(new JLabel("Enter Student ID (e.g., S001):"));
         searchPanel.add(studentIdFineReportField);
@@ -291,8 +414,9 @@ public class AdminDashboard extends JFrame implements ActionListener {
         individualFineReportPanel.add(new JScrollPane(individualFineReportTable), BorderLayout.CENTER);
     }
 
-     private void createMonthlyFineReportTab() {
+    private void createMonthlyFineReportTab() {
         monthlyFineReportPanel = new JPanel(new BorderLayout(10, 10));
+        monthlyFineReportPanel.setBackground(SECONDARY_COLOR);
         monthlyFineReportPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         // Controls Panel
         JPanel controlsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -300,8 +424,23 @@ public class AdminDashboard extends JFrame implements ActionListener {
         Vector<Integer> years = new Vector<>();
         for (int y = currentYear + 1; y >= currentYear - 5; y--) { years.add(y); } // Populate years
         yearSelector = new JComboBox<>(years);
+        yearSelector.setBorder(new RoundedBorder(BORDER_RADIUS));
+        yearSelector.setFont(MAIN_FONT);
+        yearSelector.setBackground(PRIMARY_COLOR);
+        yearSelector.setForeground(Color.WHITE);
+        yearSelector.setFocusable(false);
         monthSelector = new JComboBox<>(Month.values()); monthSelector.setSelectedItem(LocalDate.now().getMonth());
+        monthSelector.setBorder(new RoundedBorder(BORDER_RADIUS));
+        monthSelector.setFont(MAIN_FONT);
+        monthSelector.setBackground(PRIMARY_COLOR);
+        monthSelector.setForeground(Color.WHITE);
+        monthSelector.setFocusable(false);
         searchMonthlyFineReportButton = new JButton("Get Monthly Report"); searchMonthlyFineReportButton.addActionListener(this);
+        searchMonthlyFineReportButton.setFont(MAIN_FONT);
+        searchMonthlyFineReportButton.setBackground(PRIMARY_COLOR);
+        searchMonthlyFineReportButton.setForeground(Color.WHITE);
+        searchMonthlyFineReportButton.setFocusPainted(false);
+        searchMonthlyFineReportButton.setBorder(new RoundedBorder(BORDER_RADIUS));
         controlsPanel.add(new JLabel("Year:")); controlsPanel.add(yearSelector);
         controlsPanel.add(new JLabel("Month:")); controlsPanel.add(monthSelector);
         controlsPanel.add(searchMonthlyFineReportButton);
@@ -312,13 +451,6 @@ public class AdminDashboard extends JFrame implements ActionListener {
         monthlyFineReportPanel.add(monthlyTotalLabel, BorderLayout.CENTER);
     }
 
-    private void createLogoutTab() {
-        logoutPanel = new JPanel(new GridBagLayout());
-        logoutButton = new JButton("Logout");
-        logoutButton.setPreferredSize(new Dimension(150, 40)); logoutButton.setFont(new Font("Arial", Font.BOLD, 14));
-        logoutButton.setToolTipText("Logout and return to the login screen."); logoutButton.addActionListener(this);
-        GridBagConstraints gbc = new GridBagConstraints(); logoutPanel.add(logoutButton, gbc);
-    }
 
     // --- Action Listener Implementation ---
     @Override
@@ -366,10 +498,10 @@ public class AdminDashboard extends JFrame implements ActionListener {
             @Override protected String doInBackground() throws Exception { return adminService.addLibrarian(username, password, name, email); }
             @Override protected void done() { try { String newId = get(); showSuccess("Librarian '" + name + "' added (ID: " + newId + ")"); libUsernameField.setText(""); libPasswordField.setText(""); libNameField.setText(""); libEmailField.setText(""); loadAllLibrarians(); loadAllUsers(); } catch (Exception e) { handleLoadingError(e, "adding librarian"); } finally { addLibrarianButton.setEnabled(true); } } }; worker.execute();
     }
-     private void handleDeleteLibrarian() {
+    private void handleDeleteLibrarian() {
         int selectedRow = librariansTable.getSelectedRow(); if (selectedRow == -1) { showWarning("Select librarian."); return; } int modelRow = librariansTable.convertRowIndexToModel(selectedRow);
         String libId = (String) librariansTableModel.getValueAt(modelRow, 0); String libName = (String) librariansTableModel.getValueAt(modelRow, 1); String libUsername = (String) librariansTableModel.getValueAt(modelRow, 2);
-         if (libUsername.equals(session.getUsername())) { showWarning("Cannot delete self."); return; }
+        if (libUsername.equals(session.getUsername())) { showWarning("Cannot delete self."); return; }
         int confirm = JOptionPane.showConfirmDialog(this, "Delete librarian:\nID: " + libId + "\nName: " + libName + "\nUsername: " + libUsername + "\n\nThis deletes login.", "Confirm", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE); if (confirm != JOptionPane.YES_OPTION) return;
         deleteLibrarianButton.setEnabled(false);
         SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
@@ -400,7 +532,7 @@ public class AdminDashboard extends JFrame implements ActionListener {
             @Override protected void done() { try { List<Object[]> users = get(); usersTableModel.setRowCount(0); if(users.isEmpty()){ System.out.println("No users."); } else { users.forEach(usersTableModel::addRow); } applyUserFilter(searchTerm); } catch (Exception e) { handleLoadingError(e, "users"); usersTableModel.setRowCount(0); } } }; worker.execute();
     }
     private void applyUserFilter(String searchTerm) {
-         TableRowSorter<DefaultTableModel> sorter = (TableRowSorter<DefaultTableModel>) usersTable.getRowSorter(); if (sorter == null) { sorter = new TableRowSorter<>(usersTableModel); usersTable.setRowSorter(sorter); } if (searchTerm.isEmpty()) { sorter.setRowFilter(null); } else { try { RowFilter<DefaultTableModel, Object> rf = RowFilter.regexFilter("(?i)" + searchTerm, 0, 3); sorter.setRowFilter(rf); } catch (java.util.regex.PatternSyntaxException e) { System.err.println("Invalid regex: " + searchTerm); sorter.setRowFilter(null); } }
+        TableRowSorter<DefaultTableModel> sorter = (TableRowSorter<DefaultTableModel>) usersTable.getRowSorter(); if (sorter == null) { sorter = new TableRowSorter<>(usersTableModel); usersTable.setRowSorter(sorter); } if (searchTerm.isEmpty()) { sorter.setRowFilter(null); } else { try { RowFilter<DefaultTableModel, Object> rf = RowFilter.regexFilter("(?i)" + searchTerm, 0, 3); sorter.setRowFilter(rf); } catch (java.util.regex.PatternSyntaxException e) { System.err.println("Invalid regex: " + searchTerm); sorter.setRowFilter(null); } }
     }
     private void loadAllLibrarians() {
         librariansTableModel.setRowCount(0); librariansTableModel.addRow(new Object[]{"Loading...", "", "", ""});
@@ -423,7 +555,7 @@ public class AdminDashboard extends JFrame implements ActionListener {
             @Override protected List<Object[]> doInBackground() throws Exception { return adminService.getAvailableBooksReport(); }
             @Override protected void done() { try { List<Object[]> books = get(); availableBooksReportModel.setRowCount(0); if(books.isEmpty()){ System.out.println("No available books."); } else { books.forEach(availableBooksReportModel::addRow); } } catch (Exception e) { handleLoadingError(e, "available books report"); availableBooksReportModel.setRowCount(0); } } }; worker.execute();
     }
-     private void loadBorrowedBooksReport() {
+    private void loadBorrowedBooksReport() {
         borrowedBooksReportModel.setRowCount(0); borrowedBooksReportModel.addRow(new Object[]{"Loading...", "", "", "", "", null, null, ""});
         SwingWorker<List<Object[]>, Void> worker = new SwingWorker<>() {
             @Override protected List<Object[]> doInBackground() throws Exception { return adminService.getAllBorrowedBooksReport(); }
@@ -453,6 +585,6 @@ public class AdminDashboard extends JFrame implements ActionListener {
     private void showSuccess(String message) { showMessage(message, "Success", JOptionPane.INFORMATION_MESSAGE); }
     private void showInfo(String message) { showMessage(message, "Information", JOptionPane.INFORMATION_MESSAGE); }
     private void handleLoadingError(Exception e, String context) { Throwable cause = e.getCause() != null ? e.getCause() : e; showError("Error loading " + context + ": " + cause.getMessage()); cause.printStackTrace(); }
-    private boolean isValidEmail(String email) { if (email == null || email.isEmpty()) return false; String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$"; return email.matches(emailRegex); }
+    private boolean isValidEmail(String email) { if (email == null || email.isEmpty()) return false; String emailRegex = "^[a-zA-Z0-9_+&-]+(?:\\.[a-zA-Z0-9_+&-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$"; return email.matches(emailRegex); }
 
 }
